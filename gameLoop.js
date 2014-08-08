@@ -13,7 +13,7 @@ var animate = function(time) {
 };
 
 var readInputs = function(time){
-    /*box.acceleration[0] = box.acceleration[1] = 0;
+    box.acceleration[0] = box.acceleration[1] = 0;
     if (readInputs.keys[38]) {
         box.acceleration[1]=-1e-3;
     }
@@ -25,7 +25,7 @@ var readInputs = function(time){
     }
     if (readInputs.keys[37]) {
         box.acceleration[0]=-1e-3;
-    }*/
+    }
 };
 readInputs.keys = {};
 document.body.addEventListener("keydown", function (e) {
