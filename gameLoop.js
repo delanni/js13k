@@ -53,8 +53,9 @@ var meter = new FPSMeter();
 var gameLoop = function(n) {
     meter.tickStart();
     
+    n=n||60/1000;
     if (!gameLoop.lastTime) {
-        gameLoop.lastTime = n || 1000/60;
+        gameLoop.lastTime = n;
         r(gameLoop);
         meter.tick();
         return;
@@ -63,7 +64,7 @@ var gameLoop = function(n) {
     readInputs();
     animate(n-gameLoop.lastTime);
     render(n-gameLoop.lastTime);
-    gameLoop.lastTime = n || 1000/60;
+    gameLoop.lastTime = n;
     meter.tick();
 };
 
