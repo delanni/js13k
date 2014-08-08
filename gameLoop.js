@@ -54,7 +54,7 @@ var gameLoop = function(n) {
     meter.tickStart();
     
     if (!gameLoop.lastTime) {
-        gameLoop.lastTime = n;
+        gameLoop.lastTime = n || 1000/60;
         r(gameLoop);
         meter.tick();
         return;
@@ -63,7 +63,7 @@ var gameLoop = function(n) {
     readInputs();
     animate(n-gameLoop.lastTime);
     render(n-gameLoop.lastTime);
-    gameLoop.lastTime = n;
+    gameLoop.lastTime = n || 1000/60;
     meter.tick();
 };
 
