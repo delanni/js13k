@@ -5,15 +5,24 @@ var r = (function() {
 })();
 
 
-var box = new PhysicsBody(new AABB(50,50,5,6));
+var world = new World();
+//var box = new BoxEntity(new Vector2d(50,50),new Vector2d(5,6),P[2]);
+
+for(var ix = 0 ; ix< 15; ix++){
+	var box = new BoxEntity(new Vector2d(randBetween(0,100,1),randBetween(0,100,1)), new Vector2d(randBetween(2,7,1), randBetween(2,7,1)), P[randBetween(0,4,1)]);
+	world.entities.push(box);
+}
 
 var animate = function(time) {
     // animate animatables
-    box.tick(time);
+	world.entities.forEach(function(E){
+		E.animate(world,time);
+	});
 };
 
 var readInputs = function(time){
-    box.acceleration[0] = box.acceleration[1] = 0;
+    /*
+	box.acceleration[0] = box.acceleration[1] = 0;
     if (readInputs.keys[38]) {
         box.acceleration[1]=-1e-3;
     }
@@ -26,6 +35,7 @@ var readInputs = function(time){
     if (readInputs.keys[37]) {
         box.acceleration[0]=-1e-3;
     }
+	*/
 };
 readInputs.keys = {};
 document.body.addEventListener("keydown", function (e) {
@@ -42,8 +52,12 @@ var render = function(time) {
     var ctx = miniCanvas.getContext("2d");
     ctx.fillStyle = P[0];
     ctx.fillRect(0,0,miniCanvas.width,miniCanvas.height);
-    ctx.fillStyle = P[2];
-    ctx.fillRect.apply(ctx,box.getLTWH());
+	
+	world.entities.forEach(function(E){
+		if (E.isVisible){
+			E.draw(ctx,world);
+		}
+	});
     
     maxiCanvas.copyFrom(miniCanvas);
 };
