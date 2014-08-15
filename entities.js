@@ -152,13 +152,76 @@ var BoxEntity = (function() {
 	return BoxEntity;
 })();
 
+var GroundEntity = (function(){
+	function GroundEntity(heightmap){
+		this.isVisible = true;
+		this.isCollisionAware = true;
+		this.heightmap = heightmap;
+		this.color = P[2];
+	}
+	
+	GroundEntity.prototype.draw = function(ctx, world) {
+		var width = ctx.canvas.width;
+		var height = ctx.canvas.height;
+		
+		ctx.save();
+	    ctx.fillStyle = this.color;
+		ctx.beginPath();
+		ctx.moveTo(0, height);
+		for(var i = 0; i < this.heightmap.length; i++){
+			ctx.lineTo(i,height-heightmap[i]);
+		}
+		ctx.lineTo(width+1,height);
+		ctx.closePath();
+		ctx.fill();
+		ctx.restore();
+	};
+	
+	GroundEntity.prototype.animate = function(world,time) {
+	};
+	
+	return GroundEntity;
+})();
+
 var World = (function () {
 
     function World() {
         this.entities = [];
+		this.groundElements = [];
         this.player = null;
         this.gravity = new Vector2d(0,1e-3);
     }
+	
+	World.prototype.render = function(ctx,time){
+		var theWorld = this;
+		this.entities.forEach(function(E){
+			if (E.isVisible){
+				E.draw(ctx,theWorld);
+			}
+		});
+		
+		this.groundElements.forEach(function(E){
+			if (E.isVisible){
+				E.draw(ctx,theWorld);
+			}
+		});
+	};
+	
+	World.prototype.animate = function(time){
+		var theWorld = this;
+		
+		this.resolveCollisions(time);
+		
+		this.entities.forEach(function(E){
+			if (E.isVisible){
+				E.animate(theWorld,time);
+			}
+		});
+	};
+	
+	World.prototype.resolveCollisions = function(time){
+		
+	};
 
     return World;
 })();
