@@ -13,11 +13,16 @@ for(var ix = 0 ; ix< 15; ix++){
 	world.entities.push(box);
 }
 
+var heightmap = [];
+for(var ix = 0; ix< 160; ix++){
+	heightmap.push(randBetween(15,20,1));
+}
+var ground = new GroundEntity(heightmap);
+world.entities.push(ground);
+
 var animate = function(time) {
     // animate animatables
-	world.entities.forEach(function(E){
-		E.animate(world,time);
-	});
+	world.animate(time);
 };
 
 var readInputs = function(time){
@@ -37,6 +42,7 @@ var readInputs = function(time){
     }
 	*/
 };
+
 readInputs.keys = {};
 document.body.addEventListener("keydown", function (e) {
     readInputs.keys[e.keyCode] = true;
@@ -53,11 +59,7 @@ var render = function(time) {
     ctx.fillStyle = P[0];
     ctx.fillRect(0,0,miniCanvas.width,miniCanvas.height);
 	
-	world.entities.forEach(function(E){
-		if (E.isVisible){
-			E.draw(ctx,world);
-		}
-	});
+	world.render(ctx,time);
     
     maxiCanvas.copyFrom(miniCanvas);
 };
