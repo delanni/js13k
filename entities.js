@@ -4,6 +4,12 @@ var Vector2d = (function () {
         this[1] = y || 0;
     }
 
+    Vector2d.random = function(base){
+    	var v = new Vector2d(Math.random()-0.5,Math.random()-0.5);
+    	if (base) v.normalize(base);
+    	return v;
+    };
+
     Vector2d.prototype.add = function (other) {
         return new Vector2d(this[0] + other[0], this[1] + other[1]);
     };
@@ -89,11 +95,11 @@ var PhysicsBody = (function () {
 		if (this.speed.getMagnitude() < PhysicsBody.EPSILON) {
             this.speed.doMultiply(0);
         } else {
-            if (this.speed[0] > PhysicsBody.XLIMIT) {
-                this.speed[0] = PhysicsBody.XLIMIT;
+        	if (Math.abs(this.speed[0]) > PhysicsBody.XLIMIT) {
+                this.speed[0] = clamp(this.speed[0], -PhysicsBody.XLIMIT, PhysicsBody.XLIMIT);
             }
-            if (this.speed[1] > PhysicsBody.YLIMIT) {
-                this.speed[1] = PhysicsBody.YLIMIT;
+            if (Math.abs(this.speed[1]) > PhysicsBody.YLIMIT) {
+                this.speed[1] = clamp(this.speed[1], -PhysicsBody.YLIMIT, PhysicsBody.YLIMIT);
             }
         }
 	};
@@ -131,6 +137,7 @@ var Entity = (function () {
 var BoxEntity = (function() {
 	function BoxEntity(center,corner, color){
 		this.isVisible = true;
+		this.isAlive = true;
 		this.color = color;
 		this.body = new PhysicsBody(center,corner);
 	}
@@ -144,40 +151,57 @@ var BoxEntity = (function() {
 	
 	BoxEntity.prototype.animate = function(world,time) {
 		this.body.tick(time);
-		if (!this.body.isOnGround){
-			this.body.applyAcceleration(world.gravity,time);
-		}
 	};
-	
+
+	BoxEntity.prototype.collideAction = function(other){
+
+	};
+
+	BoxEntity.prototype.collideGround = function (other){
+		this.body.speed.doMultiply(-other.restitution);
+		this.body.limitSpeed();
+		if (this.body.speed.getMagnitude()==0) this.isOnGround = true;
+	};
+
 	return BoxEntity;
 })();
 
 var GroundEntity = (function(){
-	function GroundEntity(heightmap){
+	function GroundEntity(heightmap, width,height){
 		this.isVisible = true;
 		this.isCollisionAware = true;
 		this.heightmap = heightmap;
 		this.color = P[2];
+		this.restitution = 0.2;
+		this.width = width || 160;
+		this.height = height || 144;
 	}
 	
 	GroundEntity.prototype.draw = function(ctx, world) {
-		var width = ctx.canvas.width;
-		var height = ctx.canvas.height;
+		this.width = ctx.canvas.width;
+		this.height = ctx.canvas.height;
 		
 		ctx.save();
 	    ctx.fillStyle = this.color;
 		ctx.beginPath();
-		ctx.moveTo(0, height);
+		ctx.moveTo(0, this.height);
 		for(var i = 0; i < this.heightmap.length; i++){
-			ctx.lineTo(i,height-heightmap[i]);
+			ctx.lineTo(i,this.height-heightmap[i]);
 		}
-		ctx.lineTo(width+1,height);
+		ctx.lineTo(this.width+1,this.height);
 		ctx.closePath();
 		ctx.fill();
 		ctx.restore();
 	};
 	
 	GroundEntity.prototype.animate = function(world,time) {
+	};
+
+	GroundEntity.prototype.collidesWith = function(body){
+		var ltwh = body.getLTWH();
+		var max = this.heightmap.maxInRange(clamp(ltwh[0],0,this.width), clamp(ltwh[0]+ltwh[2],0,this.width));
+		if (max+ltwh[1]+ltwh[3]>this.height) return true;
+		return false;
 	};
 	
 	return GroundEntity;
@@ -190,6 +214,7 @@ var World = (function () {
 		this.groundElements = [];
         this.player = null;
         this.gravity = new Vector2d(0,1e-3);
+       	//this.gravity = new Vector2d(0,0);
     }
 	
 	World.prototype.render = function(ctx,time){
@@ -213,14 +238,28 @@ var World = (function () {
 		this.resolveCollisions(time);
 		
 		this.entities.forEach(function(E){
-			if (E.isVisible){
-				E.animate(theWorld,time);
-			}
+			E.isAlive && E.animate(theWorld,time);
+			E.isOnGround || E.body.applyAcceleration(theWorld.gravity,time);
 		});
 	};
 	
 	World.prototype.resolveCollisions = function(time){
-		
+		var ents = this.entities,
+		lt = ents.length,
+		gents = this.groundElements,
+		glt = gents.length,
+		ei,ej;
+		for(var i =0 ; i < lt; i++){
+			ei = ents[i];
+			/*for(var j=0;j< lt; j++){
+				ej = ents[j];
+				if (i!==j && ei.body.intersects(ej.body)) ei.collideAction(ej);
+			}*/
+			for(j=0;j<glt;j++){
+				ej = gents[j];
+				if(!ei.isOnGround && ej.collidesWith(ei.body)) ei.collideGround(ej);
+			}
+		}
 	};
 
     return World;

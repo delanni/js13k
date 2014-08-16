@@ -6,9 +6,8 @@ var r = (function() {
 
 
 var world = new World();
-//var box = new BoxEntity(new Vector2d(50,50),new Vector2d(5,6),P[2]);
 
-for(var ix = 0 ; ix< 15; ix++){
+for(var ix = 0 ; ix< 1; ix++){
 	var box = new BoxEntity(new Vector2d(randBetween(0,100,1),randBetween(0,100,1)), new Vector2d(randBetween(2,7,1), randBetween(2,7,1)), P[randBetween(0,4,1)]);
 	world.entities.push(box);
 }
@@ -18,7 +17,7 @@ for(var ix = 0; ix< 160; ix++){
 	heightmap.push(randBetween(15,20,1));
 }
 var ground = new GroundEntity(heightmap);
-world.entities.push(ground);
+world.groundElements.push(ground);
 
 var animate = function(time) {
     // animate animatables
@@ -50,6 +49,16 @@ document.body.addEventListener("keydown", function (e) {
 document.body.addEventListener("keyup", function (e) {
     readInputs.keys[e.keyCode] = false;
 });
+
+miniCanvas.onclick = function(e){
+	for (var i = 0; i < 30; i++){
+		var center = new Vector2d(e.offsetX,e.offsetY);
+		var corner = Vector2d.random(5);
+		var z = new BoxEntity(center,corner,P[2]);
+		z.body.speed = Vector2d.random();
+		world.entities.push(z);
+	}
+};
 
 var render = function(time) {
     // render renderables to mini canvas (GB sized)
