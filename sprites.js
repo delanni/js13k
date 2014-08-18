@@ -55,8 +55,9 @@ var Animation = (function(){
 })();
 
 var SpriteSheet = (function(){
-	function SpriteSheet(url, readycallback){
+	function SpriteSheet(url, key){
 		this.url = url;
+		this.key = key||url;
 		this.w = 0;
 		this.h = 0;
 		this.img = null;
@@ -84,7 +85,7 @@ var SpriteSheet = (function(){
 			spr.isReady = true;
 			spr.width=this.width;
 			spr.height=this.height;
-			callback();
+			callback(spr);
 		}
 		this.img.src = this.url;
 	};
@@ -119,32 +120,40 @@ var SpriteSheet = (function(){
 var SpriteSheetLoader = (function(){
 	function SpriteSheetLoader(onLoadingReady){
 		this.onLoadingReady = onLoadingReady;
-		this.spriteSheets = {};
+		this.queue = {};
 		this.items = 0;
+		this.loaded=0;
 	}
 	
-	SpriteSheetLoader.prototype.addItem = function(img,key){
+	SpriteSheetLoader.prototype.addItem = function(sheet,key){
 		this.items++;
-		this.spriteSheets[key]=img;
+		this.queue[sheet.key]=sheet;
 	};
 	
 	SpriteSheetLoader.prototype.start = function(n){
-		this.intervalId = setInterval(this.checkIfReady,100);
+		this.intervalId = setInterval(this.terminateIfReady,100);
 		this.startLoading(n);
 	};
 	
 	SpriteSheetLoader.prototype.startLoading = function(n){
-		var i = 0;
-		var keys = Object.keys(this.spriteSheets);
+		var keys = Object.keys(this.queue);
 		for(var key in keys){
-			if (i>n || .length<=0) return;
-			this.spriteSheets[key].loadImage(callback);
-			i++;
+			if (keys.length<=0) return;
+			this.queue[key].loadImage(this.imageLoaded);
 		}
 	};
 	
-	SpriteSheetLoader.prototype.checkIfReady(){
-		
+	SpriteSheetLoader.prototype.imageLoaded(key){
+		this.spriteSheets[key] = this.queue[key];
+		delete this.queue[key];
+		this.loaded++;
+	};
+	
+	SpriteSheetLoader.prototype.terminateIfReady(){
+		if (this.loaded == this.items){
+			clearInterval(this.intervalId);
+			this.onLoadingReady(this);
+		}
 	};
 
 	return SpriteSheetLoader;
