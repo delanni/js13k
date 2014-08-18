@@ -7,8 +7,8 @@ var Frame = (function(){
 		this.h = h;
 	}
 	
-	Frame.prototype.drawItself = function(ctx){
-		ctx.drawImage(this.img,this.x,this.y,this.w,this.h,0,0,this.w,this.h);
+	Frame.prototype.drawItself = function(ctx,x,y){
+		ctx.drawImage(this.img,this.x,this.y,this.w,this.h,x,y,this.w,this.h);
 	};
 	
 	return Frame;
@@ -37,13 +37,13 @@ var Animation = (function(){
 	};
 	
 	// may be needed to offset the very first frame by -forTime not to skip it
-	Animation.prototype.drawFrame = function(ctx, forTime){
+	Animation.prototype.drawFrame = function(ctx,x,y, forTime){
 		if(!this.isReady) this.init();
 		var t=  (this.remainder+forTime);
 		var frameStep = Math.floor(t / this.frameLength);
 		this.remainder = t%this.frameLength;
 		var frame = this.skip(frameStep);
-		frame.drawItself(ctx);
+		frame.drawItself(ctx,x,y);
 	};
 	
 	Animation.prototype.skip = function(frames){
