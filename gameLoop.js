@@ -1,3 +1,4 @@
+
 var r = (function() {
     return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(callback) {
         window.setTimeout(callback, 1000 / 60,  1000 / 60);
@@ -6,11 +7,6 @@ var r = (function() {
 
 
 var world = new World();
-
-for(var ix = 0 ; ix< 1; ix++){
-	var box = new BoxEntity(new Vector2d(randBetween(0,100,1),randBetween(0,100,1)), new Vector2d(randBetween(2,7,1), randBetween(2,7,1)), P[randBetween(0,4,1)]);
-	world.entities.push(box);
-}
 
 var heightmap = [];
 for(var ix = 0; ix< 160; ix++){
@@ -53,13 +49,11 @@ document.body.addEventListener("keyup", function (e) {
 });
 
 miniCanvas.onclick = function(e){
-	for (var i = 0; i < 30; i++){
-		var center = new Vector2d(e.offsetX,e.offsetY);
-		var corner = Vector2d.random(5);
-		var z = new BoxEntity(center,corner,P[2]);
-		z.body.speed = Vector2d.random();
-		world.entities.push(z);
-	}
+    var exp = new Effects.Explosion({
+        collisionType:Effects.Explosion.COLLIDE_GROUND
+    });
+
+    exp.fire(e.offsetX,e.offsetY,world);
 };
 
 var anim;
@@ -69,7 +63,16 @@ var s = new SpriteSheet("img/parrot_spritesheet_tiny.png","parrot");
 var onLoaded = function(loader){
 	var parrot = loader.spriteSheets["parrot"];
 	anim = parrot.getAnimation(16,16,6,400,0);
-	anim.x=anim.y=0;
+	anim.x=anim.y=50;
+    setInterval(function(){
+        var exp = new Effects.Explosion({
+            gravityFactor: [0.2,1],
+            offset: new Vector2d(-0.2,0),
+            collisionType:Effects.Explosion.COLLIDE_GROUND
+        });
+
+        exp.fire(anim.x+8,anim.y+8,world);
+    },300);
 }
 var loader = new SpriteSheetLoader(onLoaded);
 loader.addItem(s);
