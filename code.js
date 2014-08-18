@@ -2,9 +2,6 @@ var miniCanvas = document.createElement("canvas");
 var maxiCanvas = document.createElement("canvas");
 var draftCanvas = document.createElement("canvas");
 
-draftCanvas.width = parrot.width;
-draftCanvas.height = parrot.height;
-
 miniCanvas.width = 160;
 miniCanvas.height = 144;
 
