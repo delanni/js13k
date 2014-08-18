@@ -20,3 +20,5 @@ Array.prototype.maxInRange = function(from,to){
 	if (from>=0 && to<=this.length && from<to) return Math.max.apply(null,this.slice(from,to));
 	return NaN;
 };
+
+noop = function(){};
