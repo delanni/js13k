@@ -63,11 +63,18 @@ miniCanvas.onclick = function(e){
 };
 
 var anim;
-var s = new SpriteSheet("img/parrot_spritesheet_tiny.png", function(){
-	anim = s.getAnimation(16,16, [5,4,3,2,1,0], 300, 0);
-	anim.x=0;
-	anim.y=0;
-});
+var s = new SpriteSheet("img/parrot_spritesheet_tiny.png","parrot");
+
+
+var onLoaded = function(loader){
+	var parrot = loader.spriteSheets["parrot"];
+	anim = parrot.getAnimation(16,16,6,400,0);
+	anim.x=anim.y=0;
+}
+var loader = new SpriteSheetLoader(onLoaded);
+loader.addItem(s);
+
+loader.start(10);
 
 var render = function(time) {
     // render renderables to mini canvas (GB sized)

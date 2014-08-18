@@ -78,14 +78,14 @@ var SpriteSheet = (function(){
 		return totalx/tileWidth;
 	};
 	
-	SpriteSheet.prototype.loadImage = function(callback){
+	SpriteSheet.prototype.loadImage = function(callback, caller){
 		this.img = new Image();
 		var spr = this;
 		this.img.onload = function(){
 			spr.isReady = true;
 			spr.width=this.width;
 			spr.height=this.height;
-			callback(spr);
+			callback.apply(caller,[spr]);
 		}
 		this.img.src = this.url;
 	};
@@ -121,35 +121,43 @@ var SpriteSheetLoader = (function(){
 	function SpriteSheetLoader(onLoadingReady){
 		this.onLoadingReady = onLoadingReady;
 		this.queue = {};
+		this.spriteSheets = {};
 		this.items = 0;
 		this.loaded=0;
 	}
 	
-	SpriteSheetLoader.prototype.addItem = function(sheet,key){
+	SpriteSheetLoader.prototype.addItem = function(sheet){
 		this.items++;
 		this.queue[sheet.key]=sheet;
 	};
 	
 	SpriteSheetLoader.prototype.start = function(n){
-		this.intervalId = setInterval(this.terminateIfReady,100);
+		n = n||5;
+		var ssl = this;
+		this.intervalId = setInterval(function(){
+			ssl.terminateIfReady();
+		},100);
 		this.startLoading(n);
 	};
 	
 	SpriteSheetLoader.prototype.startLoading = function(n){
 		var keys = Object.keys(this.queue);
-		for(var key in keys){
+		var key;
+		for(var k=0; k<keys.length; k++){
+			key = keys[k];
 			if (keys.length<=0) return;
-			this.queue[key].loadImage(this.imageLoaded);
+			this.queue[key].loadImage(this.imageLoaded, this);
 		}
 	};
 	
-	SpriteSheetLoader.prototype.imageLoaded(key){
+	SpriteSheetLoader.prototype.imageLoaded = function(spriteSheet){
+		var key = spriteSheet.key;
 		this.spriteSheets[key] = this.queue[key];
 		delete this.queue[key];
 		this.loaded++;
 	};
 	
-	SpriteSheetLoader.prototype.terminateIfReady(){
+	SpriteSheetLoader.prototype.terminateIfReady = function(){
 		if (this.loaded == this.items){
 			clearInterval(this.intervalId);
 			this.onLoadingReady(this);
