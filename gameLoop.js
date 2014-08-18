@@ -88,7 +88,7 @@ var meter = new FPSMeter();
 var gameLoop = function(n) {
     meter.tickStart();
     
-    n=n||60/1000;
+    n=n || (gameLoop.lastTime||0)+1000/60; 
     if (!gameLoop.lastTime) {
         gameLoop.lastTime = n;
         r(gameLoop);
