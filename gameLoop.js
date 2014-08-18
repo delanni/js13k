@@ -25,21 +25,23 @@ var animate = function(time) {
 };
 
 var readInputs = function(time){
-    /*
-	box.acceleration[0] = box.acceleration[1] = 0;
+
+	// up
     if (readInputs.keys[38]) {
-        box.acceleration[1]=-1e-3;
+        if (anim) anim.y = (anim.y||0)-1;
     }
+	// down
     if (readInputs.keys[40]) {
-        box.acceleration[1]=1e-3;
+       if (anim) anim.y = (anim.y||0)+1;
     }
+	// right
     if (readInputs.keys[39]) {
-        box.acceleration[0]=1e-3;
+        if (anim) anim.x = (anim.x||0)+1;
     }
+	// left
     if (readInputs.keys[37]) {
-        box.acceleration[0]=-1e-3;
+        if (anim) anim.x = (anim.x||0)-1;
     }
-	*/
 };
 
 readInputs.keys = {};
@@ -62,7 +64,9 @@ miniCanvas.onclick = function(e){
 
 var anim;
 var s = new SpriteSheet("img/parrot_spritesheet_tiny.png", function(){
-	anim = s.getAnimation(16,16, 6, 300, 0);
+	anim = s.getAnimation(16,16, [5,4,3,2,1,0], 300, 0);
+	anim.x=0;
+	anim.y=0;
 });
 
 var render = function(time) {
@@ -74,7 +78,7 @@ var render = function(time) {
     ctx.fillRect(0,0,miniCanvas.width,miniCanvas.height);
 	
 	world.render(ctx,time);
-	if (anim) anim.drawFrame(ctx,time);
+	if (anim) anim.drawFrame(ctx,anim.x,anim.y, time);
     
     maxiCanvas.copyFrom(miniCanvas);
 };
