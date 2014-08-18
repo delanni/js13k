@@ -60,6 +60,11 @@ miniCanvas.onclick = function(e){
 	}
 };
 
+var anim;
+var s = new SpriteSheet("img/parrot_spritesheet_tiny.png", function(){
+	anim = s.getAnimation(16,16, 6, 300, 0);
+});
+
 var render = function(time) {
     // render renderables to mini canvas (GB sized)
     // then olivize and  
@@ -69,6 +74,7 @@ var render = function(time) {
     ctx.fillRect(0,0,miniCanvas.width,miniCanvas.height);
 	
 	world.render(ctx,time);
+	if (anim) anim.drawFrame(ctx,time);
     
     maxiCanvas.copyFrom(miniCanvas);
 };
