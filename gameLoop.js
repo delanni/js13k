@@ -66,13 +66,18 @@ var onLoaded = function(loader){
 	anim.x=anim.y=50;
     setInterval(function(){
         var exp = new Effects.Explosion({
-            gravityFactor: [0.2,1],
-            offset: new Vector2d(-0.2,0),
-            collisionType:Effects.Explosion.COLLIDE_GROUND
+            gravityFactor: [-0.4,-0.1],
+            offset: new Vector2d(0,0),
+            collisionType:Effects.Explosion.NO_COLLISION,
+			life:[600,1000],
+			count:[0,2],
+			strength: 0.1,
+			size:8,
+			shrink:true
         });
 
         exp.fire(anim.x+8,anim.y+8,world);
-    },300);
+    },50);
 }
 var loader = new SpriteSheetLoader(onLoaded);
 loader.addItem(s);
