@@ -10,7 +10,7 @@ var world = new World();
 
 var heightmap = [];
 for(var ix = 0; ix< 160; ix++){
-	heightmap.push(randBetween(15,20,1));
+	heightmap.push(randBetween(15,15,1));
 }
 var ground = new GroundEntity(heightmap);
 world.groundElements.push(ground);
@@ -20,23 +20,29 @@ var animate = function(time) {
 	world.animate(time);
 };
 
+var driveVector=new Vector2d(0,0);
 var readInputs = function(time){
+    driveVector[0]=driveVector[1]=0;
 
 	// up
     if (readInputs.keys[38]) {
-        if (anim) anim.y = (anim.y||0)-1;
+        driveVector[1]=-0.0005;
+        parrot.body.applyAcceleration(driveVector,time);
     }
 	// down
     if (readInputs.keys[40]) {
-       if (anim) anim.y = (anim.y||0)+1;
+        driveVector[1]=0.0005;
+        parrot.body.applyAcceleration(driveVector,time);
     }
 	// right
     if (readInputs.keys[39]) {
-        if (anim) anim.x = (anim.x||0)+1;
+        driveVector[0]=0.0005;
+        parrot.body.applyAcceleration(driveVector,time);
     }
 	// left
     if (readInputs.keys[37]) {
-        if (anim) anim.x = (anim.x||0)-1;
+        driveVector[0]=-0.0005;
+        parrot.body.applyAcceleration(driveVector,time);
     }
 };
 
@@ -60,14 +66,17 @@ var anim;
 var s = new SpriteSheet("img/parrot_spritesheet_tiny.png","parrot");
 
 
+var parrot;
 var onLoaded = function(loader){
 	var parrotSheet = loader.spriteSheets["parrot"];
-    var parrot = new SpriteEntity(parrotSheet,new Vector2d(50,50),16,16,[
+    parrot = new SpriteEntity(parrotSheet,new Vector2d(50,50),16,16,[
         [16,16,6,400,0]
         ]);
 	world.addEntity(parrot,World.NO_COLLISION,World.CENTER);
-    var emitter = new Emitters.FireEmitter(parrot,world);
-    emitter.start();
+    var fireEmitter = new Emitters.FireEmitter(parrot,world);
+    fireEmitter.start();
+    var waterEmitter = new Emitters.WaterEmitter(parrot,world);
+    waterEmitter.start();
 }
 var loader = new SpriteSheetLoader(onLoaded);
 loader.addItem(s);
@@ -100,7 +109,7 @@ var gameLoop = function(n) {
         return;
     }
     r(gameLoop);
-    readInputs();
+    readInputs(n-gameLoop.lastTime);
     animate(n-gameLoop.lastTime);
     render(n-gameLoop.lastTime);
     gameLoop.lastTime = n;

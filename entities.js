@@ -504,9 +504,34 @@ var Emitters = (function(){
         exp.fire(emitter.entity.body.center[0],emitter.entity.body.center[1],emitter.world);
     };
 
+    function WaterEmitter(entity,world){
+    	this.intervalId = 0;
+		this.interval = 50;
+		this.entity = entity;
+		this.world = world;
+    }
+
+    WaterEmitter.prototype.start = function(){
+		this.intervalId = setInterval(this.iterate,this.interval,this);
+	};
+
+	WaterEmitter.prototype.iterate = function(emitter){
+        var exp = new Effects.Explosion({
+            gravityFactor: [0.1,0.4],
+            collisionType: World.COLLIDE_GROUND,
+			life:[600,1000],
+			count:[0,2],
+			offset: new Vector2d(0.1,0),
+			strength: 0.01,
+			size:4,
+			shrink:true,
+			colors: W
+        });
+        exp.fire(emitter.entity.body.center[0],emitter.entity.body.center[1],emitter.world);
+    };
 
 	return {
-		FireEmitter:FireEmitter
-
+		FireEmitter:FireEmitter,
+		WaterEmitter:WaterEmitter
 	}
 })();
