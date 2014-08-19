@@ -26,7 +26,7 @@ var Vector2d = (function () {
         return new Vector2d(this[0] - other[0], this[1] - other[1]);
     };
 
-    Vector2d.prototype.doRemove = function (other) {
+    Vector2d.prototype.doSubstract = function (other) {
         this[0] -= other[0];
         this[1] -= other[1];
         return this;
@@ -65,7 +65,9 @@ var PhysicsBody = (function () {
 		this.corner = corner || new Vector2d();
 		this.speed = speed || new Vector2d();
 		this.acceleration = acceleration || new Vector2d();
-        this.friction = 0.05;
+		this.rotation = 0;
+		this.angularSpeed=0.3;
+		this.friction = 0.05;
     }
 
     PhysicsBody.EPSILON = 5e-3;
@@ -74,6 +76,7 @@ var PhysicsBody = (function () {
 
     PhysicsBody.prototype.tick = function (ms) {
         this.move(this.speed.multiply(ms));
+		this.rotate(this.angularSpeed*ms);
         this.speed.doAdd(this.acceleration.multiply(ms));
         this.speed.doMultiply(1 - this.friction);
         this.limitSpeed();
@@ -108,6 +111,7 @@ var PhysicsBody = (function () {
                 this.speed[1] = clamp(this.speed[1], -PhysicsBody.YLIMIT, PhysicsBody.YLIMIT);
             }
         }
+		if (Math.abs(this.angularSpeed) < PhysicsBody.EPSILON) this.angularSpeed=0;
 	};
 	
 	PhysicsBody.prototype.intersects = function (other) {
@@ -127,6 +131,10 @@ var PhysicsBody = (function () {
 			this.corner[0] * 2,
 			this.corner[1] * 2];
     };
+	
+	PhysicsBody.prototype.rotate = function(angle){
+		this.rotation+=angle;
+	};
 
     return PhysicsBody;
 })();
@@ -141,7 +149,7 @@ var Entity = (function () {
 */
 
 var Particle = (function() {
-	function Particle(center,size,color,life){
+	function Particle(center,size,color,life,shrink){
 		this.isVisible = true;
 		this.isAlive = true;
 		this.isMarked = false;
@@ -149,18 +157,23 @@ var Particle = (function() {
 		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
 		this.life = life || 300;
 		this.gravityFactor = 1;
+		this.shrinkage = shrink?(size/2)/this.life:0;
 	}
 	
 	Particle.prototype.draw = function(ctx, world) {
-		ctx.save();
+		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2],h=ltwh[3];
+		ctx.save()
+		ctx.translate(l+w/2,t+h/2);
+		ctx.rotate(this.body.rotation);
 	    ctx.fillStyle = this.color;
-		ctx.fillRect.apply(ctx,this.body.getLTWH());
+		ctx.fillRect(-w/2,-h/2,w,h);
 		ctx.restore();
 	};
 	
 	Particle.prototype.animate = function(world,time) {
 		if (this.life>=0){
 			this.life-=time;
+			this.body.corner.doSubstract([this.shrinkage*time,this.shrinkage*time]);
 			if (this.life<=0) this.isVisible = this.isAlive = !(this.isMarked=true);
 			this.body.tick(time);
 		}
@@ -177,8 +190,9 @@ var Particle = (function() {
 	Particle.prototype.collideGround = function (other){
 		this.body.speed[1]*=-other.restitution;
 		this.body.speed[0]*=other.restitution;
+		this.body.angularSpeed*=-other.restitution;
 		this.body.limitSpeed();
-		if (this.body.speed.getMagnitude()==0) this.isOnGround = true;
+		if (this.body.speed.getMagnitude()==0) {this.isOnGround = true; this.body.angularSpeed=0;}
 	};
 
 	return Particle;
@@ -330,7 +344,8 @@ var Effects = (function(){
 			center: (o.center = new Vector2d(0,0)),
 			life: [400,800],
 			collisionType: Explosion.NO_COLLISION,
-			gravityFactor: 1
+			gravityFactor: 1,
+			shrink:false
 		});
 
 		this.collisionType = params.collisionType;
@@ -342,7 +357,8 @@ var Effects = (function(){
 			var part = new Particle(params.center.copy(),
 				randBetween(params.size),
 				params.colors.random(),
-				randBetween(params.life));
+				randBetween(params.life),
+				params.shrink);
 			part.body.speed = Vector2d.random(params.strength).doAdd(params.offset);
 			part.gravityFactor = randBetween(params.gravityFactor);
 			this.particles.push(part);
