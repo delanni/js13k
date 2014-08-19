@@ -31,6 +31,10 @@ var Animation = (function(){
 		this.length = this.frames.length;
 		this.isReady=true;
 	};
+
+	Animation.prototype.reset = function() {
+		this.remainder = this.currentFrame = 0;
+	};
 	
 	Animation.prototype.pushNewFrame = function(x,y){
 		this.frames.push(new Frame(this.img,x,y,this.width,this.height));

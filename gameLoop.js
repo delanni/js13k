@@ -61,23 +61,13 @@ var s = new SpriteSheet("img/parrot_spritesheet_tiny.png","parrot");
 
 
 var onLoaded = function(loader){
-	var parrot = loader.spriteSheets["parrot"];
-	anim = parrot.getAnimation(16,16,6,400,0);
-	anim.x=anim.y=50;
-    setInterval(function(){
-        var exp = new Effects.Explosion({
-            gravityFactor: [-0.4,-0.1],
-            offset: new Vector2d(0,0),
-            collisionType:Effects.Explosion.NO_COLLISION,
-			life:[600,1000],
-			count:[0,2],
-			strength: 0.1,
-			size:8,
-			shrink:true
-        });
-
-        exp.fire(anim.x+8,anim.y+8,world);
-    },50);
+	var parrotSheet = loader.spriteSheets["parrot"];
+    var parrot = new SpriteEntity(parrotSheet,new Vector2d(50,50),16,16,[
+        [16,16,6,400,0]
+        ]);
+	world.addEntity(parrot,World.NO_COLLISION,World.CENTER);
+    var emitter = new Emitters.FireEmitter(parrot,world);
+    emitter.start();
 }
 var loader = new SpriteSheetLoader(onLoaded);
 loader.addItem(s);
@@ -93,8 +83,7 @@ var render = function(time) {
     ctx.fillRect(0,0,miniCanvas.width,miniCanvas.height);
 	
 	world.render(ctx,time);
-	if (anim) anim.drawFrame(ctx,anim.x,anim.y, time);
-    
+
     maxiCanvas.copyFrom(miniCanvas);
 };
 

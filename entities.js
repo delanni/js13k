@@ -66,7 +66,7 @@ var PhysicsBody = (function () {
 		this.speed = speed || new Vector2d();
 		this.acceleration = acceleration || new Vector2d();
 		this.rotation = 0;
-		this.angularSpeed=0.3;
+		this.angularSpeed=0;
 		this.friction = 0.05;
     }
 
@@ -148,6 +148,60 @@ var Entity = (function () {
 })();
 */
 
+var SpriteEntity = (function(){
+	function SpriteEntity(spritesheet,center,w,h,animations){
+		this.isVisible = true;
+		this.isAlive = true;
+		this.isMarked=false;
+		this.animations = [];
+		this.currentAnimation = 0;
+		this.body = new PhysicsBody(center.copy(), new Vector2d(w/2,h/2));
+		this.spritesheet = spritesheet;
+		this.loadAnimations(animations);
+	}
+
+	SpriteEntity.prototype.loadAnimations = function(animations){
+		for(var i = 0 ; i < animations.length; i++){
+			var animation = this.spritesheet.getAnimation.apply(this.spritesheet,animations[i]);
+			this.animations.push(animation);
+		}
+	};
+
+	SpriteEntity.prototype.reset = function(){
+		this.currentAnimation = 0;
+	};
+
+	SpriteEntity.prototype.setAnimation = function(i){
+		if (!this.animations[i]) return;
+		this.animations[i].reset();
+		this.currentAnimation = i;
+	};
+
+	SpriteEntity.prototype.draw = function(ctx, world, time) {
+		var a = this.animations[this.currentAnimation];
+		var v = this.body.center.substract(this.body.corner);
+		a.drawFrame(ctx,v[0],v[1],time);
+	};
+	
+	SpriteEntity.prototype.animate = function(world,time) {
+		this.body.tick(time);
+	};
+
+	SpriteEntity.prototype.collideAction = function(other){
+
+	};
+
+	SpriteEntity.prototype.applyGravity = function(gravityVector,time){
+		
+	};
+
+	SpriteEntity.prototype.collideGround = function (other){
+		
+	};
+
+	return SpriteEntity;
+})();
+
 var Particle = (function() {
 	function Particle(center,size,color,life,shrink){
 		this.isVisible = true;
@@ -160,7 +214,7 @@ var Particle = (function() {
 		this.shrinkage = shrink?(size/2)/this.life:0;
 	}
 	
-	Particle.prototype.draw = function(ctx, world) {
+	Particle.prototype.draw = function(ctx, world, time) {
 		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2],h=ltwh[3];
 		ctx.save()
 		ctx.translate(l+w/2,t+h/2);
@@ -242,6 +296,7 @@ var GroundEntity = (function(){
 var World = (function () {
 
     function World() {
+    	this.containers = ["nonCollidingEntities","collideAllEntities", "collideGroundEntities","backgroundEntities","groundElements","entities","foregroundEntities"];
         this.entities = [];
 		this.backgroundEntities=[];
 		this.foregroundEntities=[];
@@ -253,17 +308,17 @@ var World = (function () {
 		this.groundElements = [];
         this.player = null;
         this.gravity = new Vector2d(0,1e-3);
-       	//this.gravity = new Vector2d(0,0);
        	this.roundCount = 0;
     }
 	
 	World.prototype.render = function(ctx,time){
 		var theWorld = this;
 		
-		["backgroundEntities","entities", "groundElements" ,"foregroundEntities"].forEach(function(egName){
+		this.containers.slice(3).forEach(function(egName){
 			var entityGroup = theWorld[egName];
 			for(var i=0;i<entityGroup.length;i++){
-				if (entityGroup[i] && entityGroup[i].isVisible) entityGroup[i].draw(ctx,theWorld);
+				// for all renderable entities there should be an isVisible property and a draw function that takes (ctx,world)
+				if (entityGroup[i] && entityGroup[i].isVisible) entityGroup[i].draw(ctx,theWorld,time);
 			}
 		});
 	};
@@ -273,9 +328,15 @@ var World = (function () {
 		
 		this.resolveCollisions(time);
 		
-		this.entities.forEach(function(E){
-			E.isAlive && E.animate(theWorld,time);
-			E.isOnGround || (E.applyGravity && E.applyGravity(theWorld.gravity,time));
+		this.containers.slice(3).forEach(function(egName){
+			var entityGroup = theWorld[egName];
+			for(var i=0;i<entityGroup.length;i++){
+				var E = entityGroup[i];
+				// for all entities that need be animated there should be properties:
+				// isAlive, isMaked, isOnGround, animate(world,time) and applyGravity(vector,time) functions
+				E.isAlive && E.animate(theWorld,time);
+				E.isOnGround || (E.applyGravity && E.applyGravity(theWorld.gravity,time));
+			}
 		});
 
 		if(this.roundCount++>200){
@@ -286,18 +347,15 @@ var World = (function () {
 
 	World.prototype.clear = function(){
 		this.roundCount=0;
-		var count = this.entities.length;
 		var theWorld = this;
 
-		["entities","nonCollidingEntities","collideAllEntities", "collideGroundEntities"].forEach(function(egName){
+		this.containers.forEach(function(egName){
 			var entityGroup = theWorld[egName];
 			for(var i=0;i<entityGroup.length;i++){
 				if (entityGroup[i] && entityGroup[i].isMarked) delete entityGroup[i];
 			}
 			theWorld[egName] = entityGroup.filter(noop);
 		});
-
-		console.log("Removed " + (count-this.entities.length));
 	};
 
 	World.prototype.resolveCollisions = function(time){
@@ -327,7 +385,7 @@ var World = (function () {
 		}
 	};
 
-	World.prototype.addEntity(e,collisionType,zIndex){
+	World.prototype.addEntity = function(e,collisionType,zIndex){
 		switch (collisionType){
 			case 0:
 				this.nonCollidingEntities.push(e);
@@ -344,10 +402,10 @@ var World = (function () {
 		}
 		
 		switch (zIndex){
-			case 0:
+			case 1:
 				this.backgroundEntities.push(e);
 				break;
-			case 1:
+			case 0:
 				this.entities.push(e);
 				break;
 			case 2:
@@ -362,6 +420,10 @@ var World = (function () {
 	World.NO_COLLISION = 0;
 	World.COLLIDE_GROUND = 1;
 	World.COLLIDE_ALL = 2;
+
+	World.FOREGROUND = 2;
+	World.CENTER = 0;
+	World.BACKGROUND = 1;
 	
     return World;
 })();
@@ -378,11 +440,13 @@ var Effects = (function(){
 			colors:P.slice(0,4),
 			center: (o.center = new Vector2d(0,0)),
 			life: [400,800],
-			collisionType: Explosion.NO_COLLISION,
+			collisionType: World.NO_COLLISION,
+			zIndex: World.BACKGROUND,
 			gravityFactor: 1,
 			shrink:false
 		});
 
+		this.zIndex = params.zIndex;
 		this.collisionType = params.collisionType;
 		this.particles = [];
 
@@ -406,11 +470,43 @@ var Effects = (function(){
 			part.body.center[0]=x;
 			part.body.center[1]=y;
 			world.addEntity(part,this.collisionType,this.zIndex);
-			container.push(part);
 		}
 	};
 
 	return {
 		Explosion: Explosion
 	};
+})();
+
+var Emitters = (function(){
+	function FireEmitter(entity, world){
+		this.intervalId = 0;
+		this.interval = 50;
+		this.entity = entity;
+		this.world = world;
+	}
+
+	FireEmitter.prototype.start = function(){
+		this.intervalId = setInterval(this.iterate,this.interval,this);
+	};
+
+	FireEmitter.prototype.iterate = function(emitter){
+        var exp = new Effects.Explosion({
+            gravityFactor: [-0.4,-0.1],
+            collisionType: World.NO_COLLISION,
+			life:[600,1000],
+			count:[0,2],
+			strength: 0.1,
+			size:8,
+			shrink:true,
+			colors: F
+        });
+        exp.fire(emitter.entity.body.center[0],emitter.entity.body.center[1],emitter.world);
+    };
+
+
+	return {
+		FireEmitter:FireEmitter
+
+	}
 })();
