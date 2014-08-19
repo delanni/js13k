@@ -44,6 +44,12 @@ var readInputs = function(time){
         driveVector[0]=-0.0005;
         parrot.body.applyAcceleration(driveVector,time);
     }
+
+    if (readInputs.keys[32]){
+        var fb = new Projectiles.Fireball(parrot.body.center, [0.2,0], 4, world);
+        world.addEntity(fb, World.COLLIDE_ALL, World.CENTER);
+        readInputs.keys[32]=false;
+    }
 };
 
 readInputs.keys = {};

@@ -25,10 +25,24 @@ Array.prototype.random = function(){
 	return this[randBetween(0,this.length,1)];
 };
 
+Array.prototype.copy = function(){
+	return this.slice();
+}
+
 noop = function(e){return e};
 
 Object.prototype.mixin = function(what) {
   for (var k in what) 
   	if (what.hasOwnProperty(k) && !this.hasOwnProperty(k)) this[k] = what[k];
   return this;
+}
+
+Object.prototype.markForRemoval= function(){
+	this.isVisible = false;
+	this.isAlive = false;
+	this.isMarked = true;
+	if (this.resources){
+		for(var i=0;i<this.resources.length;i++)
+		this.resources[i].stop();
+	}
 }

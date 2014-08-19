@@ -142,8 +142,30 @@ var PhysicsBody = (function () {
 /*
 var Entity = (function () {
 	function Entity() {
-		
+		this.isVisible = true;
+		this.isAlive = true;
+		this.isMarked=false;
+		this.body = new PhysicsBody(center.copy(), new Vector2d(w/2,h/2));
 	}
+
+	Entity.prototype.draw = function(ctx, world, time) {
+	};
+	
+	Entity.prototype.animate = function(world,time) {
+		this.body.tick(time);
+	};
+
+	Entity.prototype.collideAction = function(other){
+
+	};
+
+	Entity.prototype.applyGravity = function(gravityVector,time){
+		
+	};
+
+	Entity.prototype.collideGround = function (other){
+	};
+
 	return Entity;
 })();
 */
@@ -211,12 +233,12 @@ var Particle = (function() {
 		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
 		this.life = life || 300;
 		this.gravityFactor = 1;
-		this.shrinkage = shrink?(size/2)/this.life:0;
+		this.shrinkage = (shrink?(size/2)/this.life:0)*shrink;
 	}
 	
 	Particle.prototype.draw = function(ctx, world, time) {
 		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2],h=ltwh[3];
-		ctx.save()
+		ctx.save();
 		ctx.translate(l+w/2,t+h/2);
 		ctx.rotate(this.body.rotation);
 	    ctx.fillStyle = this.color;
@@ -228,8 +250,9 @@ var Particle = (function() {
 		if (this.life>=0){
 			this.life-=time;
 			this.body.corner.doSubstract([this.shrinkage*time,this.shrinkage*time]);
-			if (this.life<=0) this.isVisible = this.isAlive = !(this.isMarked=true);
 			this.body.tick(time);
+		} else {
+			if (this.life<=0) this.markForRemoval();
 		}
 	};
 
@@ -484,23 +507,29 @@ var Emitters = (function(){
 		this.interval = 50;
 		this.entity = entity;
 		this.world = world;
-	}
-
-	FireEmitter.prototype.start = function(){
-		this.intervalId = setInterval(this.iterate,this.interval,this);
-	};
-
-	FireEmitter.prototype.iterate = function(emitter){
-        var exp = new Effects.Explosion({
+		this.params = {
             gravityFactor: [-0.4,-0.1],
             collisionType: World.NO_COLLISION,
 			life:[600,1000],
 			count:[0,2],
 			strength: 0.1,
 			size:8,
-			shrink:true,
+			shrink:0.7,
 			colors: F
-        });
+        };
+	}
+
+	FireEmitter.prototype.start = function(){
+		this.intervalId = setInterval(this.iterate,this.interval,this);
+	};
+
+	FireEmitter.prototype.stop = function(){
+		if (this.intervalId) clearInterval(this.intervalId);
+	};
+
+	FireEmitter.prototype.iterate = function(emitter){
+		emitter = emitter||this;
+        var exp = new Effects.Explosion(emitter.params);
         exp.fire(emitter.entity.body.center[0],emitter.entity.body.center[1],emitter.world);
     };
 
@@ -515,7 +544,12 @@ var Emitters = (function(){
 		this.intervalId = setInterval(this.iterate,this.interval,this);
 	};
 
+	WaterEmitter.prototype.stop = function(){
+		if (this.intervalId) clearInterval(this.intervalId);
+	};
+
 	WaterEmitter.prototype.iterate = function(emitter){
+		emitter = emitter||this;
         var exp = new Effects.Explosion({
             gravityFactor: [0.1,0.4],
             collisionType: World.COLLIDE_GROUND,
@@ -524,8 +558,8 @@ var Emitters = (function(){
 			offset: new Vector2d(0.1,0),
 			strength: 0.01,
 			size:4,
-			shrink:true,
-			colors: W
+			shrink:0.3,
+			colors: T
         });
         exp.fire(emitter.entity.body.center[0],emitter.entity.body.center[1],emitter.world);
     };
@@ -533,5 +567,58 @@ var Emitters = (function(){
 	return {
 		FireEmitter:FireEmitter,
 		WaterEmitter:WaterEmitter
+	}
+})();
+
+var Projectiles = (function(){
+	function Fireball(center,speed,size,world) {
+		this.isVisible = true;
+		this.isAlive = true;
+		this.isMarked = false;
+		this.life = 1500;
+		this.body = new PhysicsBody(center.copy(), new Vector2d(4,4));
+		this.body.speed.doAdd(speed);
+		this.body.friction = 0;
+		this.color = F.random();
+		this.emitter = new Emitters.FireEmitter(this,world);
+		this.emitter.params.gravityFactor = [-0.4,0.1];
+		this.emitter.params.count = [0,1];
+
+		this.resources = [this.emitter];
+	}
+
+	Fireball.prototype.draw = function(ctx, world, time) {
+		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2];
+		ctx.save();
+		ctx.translate(l+w/2,t+w/2);
+	    ctx.fillStyle = this.color;
+		ctx.fillRect(-w/2,-w/2,w,w);
+		ctx.restore();
+	};
+	
+	Fireball.prototype.animate = function(world,time) {
+		if (this.life>=0){
+			this.life-=time;
+			if (!this.emitter.world) this.emitter.world = world;
+			this.body.tick(time);
+			this.emitter.iterate();
+		} else {
+			this.markForRemoval();
+		}
+	};
+
+	Fireball.prototype.collideAction = function(other){
+
+	};
+
+	Fireball.prototype.applyGravity = function(gravityVector,time){
+		
+	};
+
+	Fireball.prototype.collideGround = function (other){
+	};
+
+	return {
+		Fireball : Fireball
 	}
 })();
