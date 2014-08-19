@@ -243,6 +243,9 @@ var World = (function () {
 
     function World() {
         this.entities = [];
+		this.backgroundEntities=[];
+		this.foregroundEntities=[];
+		
         this.nonCollidingEntities = [];
         this.collideGroundEntities = [];
         this.collideAllEntities = [];
@@ -256,15 +259,11 @@ var World = (function () {
 	
 	World.prototype.render = function(ctx,time){
 		var theWorld = this;
-		this.entities.forEach(function(E){
-			if (E.isVisible){
-				E.draw(ctx,theWorld);
-			}
-		});
 		
-		this.groundElements.forEach(function(E){
-			if (E.isVisible){
-				E.draw(ctx,theWorld);
+		["backgroundEntities","entities", "groundElements" ,"foregroundEntities"].forEach(function(egName){
+			var entityGroup = theWorld[egName];
+			for(var i=0;i<entityGroup.length;i++){
+				if (entityGroup[i] && entityGroup[i].isVisible) entityGroup[i].draw(ctx,theWorld);
 			}
 		});
 	};
@@ -328,6 +327,42 @@ var World = (function () {
 		}
 	};
 
+	World.prototype.addEntity(e,collisionType,zIndex){
+		switch (collisionType){
+			case 0:
+				this.nonCollidingEntities.push(e);
+				break;
+			case 1:
+				this.collideGroundEntities.push(e);
+				break;
+			case 2:
+				this.collideAllEntities.push(e);
+				break;
+			default:
+				this.nonCollidingEntities.push(e);
+				break;
+		}
+		
+		switch (zIndex){
+			case 0:
+				this.backgroundEntities.push(e);
+				break;
+			case 1:
+				this.entities.push(e);
+				break;
+			case 2:
+				this.foregroundEntities.push(e);
+				break;
+			default:
+				this.entities.push(e);
+				break;
+		}
+	}
+	
+	World.NO_COLLISION = 0;
+	World.COLLIDE_GROUND = 1;
+	World.COLLIDE_ALL = 2;
+	
     return World;
 })();
 
@@ -365,31 +400,12 @@ var Effects = (function(){
 		}
 	}
 
-	Explosion.NO_COLLISION = 0;
-	Explosion.COLLIDE_GROUND = 1;
-	Explosion.COLLIDE_ALL = 2;
-
 	Explosion.prototype.fire = function(x,y,world){
-		var container;
-		switch (this.collisionType){
-			case 0:
-				container = world.nonCollidingEntities;
-				break;
-			case 1:
-				container = world.collideGroundEntities;
-				break;
-			case 2:
-				container = world.collideAllEntities;
-				break;
-			default:
-				container = world.nonCollidingEntities;
-				break;
-		}
 		for(var i = 0 ; i < this.particles.length; i++){
 			var part = this.particles[i];
 			part.body.center[0]=x;
 			part.body.center[1]=y;
-			world.entities.push(part);
+			world.addEntity(part,this.collisionType,this.zIndex);
 			container.push(part);
 		}
 	};
