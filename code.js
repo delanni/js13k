@@ -10,5 +10,5 @@ maxiCanvas.height = miniCanvas.height*3;
 
 var base = document.getElementById("base");
 base.appendChild(maxiCanvas);
-base.appendChild(miniCanvas);
-base.appendChild(draftCanvas);
+//base.appendChild(miniCanvas);
+//base.appendChild(draftCanvas);
