@@ -40,7 +40,7 @@ HTMLCanvasElement.prototype.copyFrom = function(otherCanvas) {
     ctx.drawImage(otherCanvas, 0, 0, this.width, this.height);
 };
 
-HTMLCanvasElement.prototype.olivize = function(scale) {
+/*HTMLCanvasElement.prototype.olivize = function(scale) {
     // scale is [.25,.50,.75];
     // instead, it should be [(y(o1)+y(o2))/2, (y(o2)+y(o3))/2, (y(o3)+y(o4))/2]
     // where y(on) is the intensity of the nth olive color
@@ -54,14 +54,14 @@ HTMLCanvasElement.prototype.olivize = function(scale) {
         b = imgData.data[i + 2];
         y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
         var index = (y * 4 / 255) | 0;
-        c = R[index];
+        c = [index];
         imgData.data[i] = c[0];
         imgData.data[i + 1] = c[1];
         imgData.data[i + 2] = c[2];
     }
 
     ctx.putImageData(imgData, 0, 0);
-}
+}*/
 
 /*
 HTMLCanvasElement.prototype.extract4Bit = function() {

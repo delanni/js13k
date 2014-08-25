@@ -69,11 +69,11 @@ var SpriteSheet = (function(){
 		var spr = this;
 	}
 	
-	SpriteSheet.prototype.getXYFor = function(frameCount, tileWidth, tileHeight, animwidth){
-		var totalx = frameCount*tileWidth, cw = (animwidth || this.width),
+	SpriteSheet.prototype.getXYFor = function(frameCount, tileWidth, tileHeight, offsetxy){
+		var totalx = frameCount*tileWidth+offsetxy[0], cw = this.width,
 		startx = totalx%cw,
 		starty = Math.floor(totalx/cw)*tileHeight;
-		return [startx,starty];
+		return [startx,starty+offsetxy[1]];
 	};
 		
 	SpriteSheet.prototype.getFrameByXY = function(x,y,tileWidth,tileHeight,animwidth){
@@ -100,21 +100,19 @@ var SpriteSheet = (function(){
 		
 		var startx = 0;
 		var starty = 0;
-		var startxy = (typeof start === "number")? this.getXYFor(start,tileWidth,tileHeight, animwidth) : start;
-		var f0 = (typeof start === "number" ) ? start: this.getFrameByXY(start[0],start[1],animwidth);
-		startx = startxy[0];
-		starty = startxy[1];
+		var startxy = (typeof start === "number")? this.getXYFor(start,tileWidth,tileHeight, [0,0]) : start;
 		
 		if (typeof frames === "number"){
 			var ar = [];
-			for(var i = 0;i<frames;i++) ar.push(i+f0);
+			for(var i = 0;i<frames;i++) ar.push(i);
 			frames = ar;
 		}
 		
 		for(var i =0; i<frames.length;i++){
-			var xy = this.getXYFor(frames[i],tileWidth,tileHeight,animwidth);
-			a.pushNewFrame(startx+xy[0],starty+xy[1]);
+			var xy = this.getXYFor(frames[i],tileWidth,tileHeight,startxy);
+			a.pushNewFrame(xy[0],xy[1]);
 		}
+
 		return a;
 	};
 	

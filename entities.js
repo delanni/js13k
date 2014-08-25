@@ -12,6 +12,11 @@ var Vector2d = (function () {
     	return v;
     };
 
+    Vector2d.prototype.set = function(loc){
+    	this[0]=loc[0];
+    	this[1]=loc[1];
+    };
+
     Vector2d.prototype.add = function (other) {
         return new Vector2d(this[0] + other[0], this[1] + other[1]);
     };
@@ -101,16 +106,19 @@ var PhysicsBody = (function () {
 	};
 	
 	PhysicsBody.prototype.limitSpeed = function(){
-		if (this.speed.getMagnitude() < PhysicsBody.EPSILON) {
-            this.speed.doMultiply(0);
-        } else {
-        	if (Math.abs(this.speed[0]) > PhysicsBody.XLIMIT) {
-                this.speed[0] = clamp(this.speed[0], -PhysicsBody.XLIMIT, PhysicsBody.XLIMIT);
-            }
-            if (Math.abs(this.speed[1]) > PhysicsBody.YLIMIT) {
-                this.speed[1] = clamp(this.speed[1], -PhysicsBody.YLIMIT, PhysicsBody.YLIMIT);
-            }
-        }
+		var mag = this.speed.getMagnitude();
+		if (mag!=0){
+			if (mag < PhysicsBody.EPSILON) {
+	            this.speed.doMultiply(0);
+	        } else {
+	        	if (Math.abs(this.speed[0]) > PhysicsBody.XLIMIT) {
+	                this.speed[0] = clamp(this.speed[0], -PhysicsBody.XLIMIT, PhysicsBody.XLIMIT);
+	            }
+	            if (Math.abs(this.speed[1]) > PhysicsBody.YLIMIT) {
+	                this.speed[1] = clamp(this.speed[1], -PhysicsBody.YLIMIT, PhysicsBody.YLIMIT);
+	            }
+	        }
+    	}
 		if (Math.abs(this.angularSpeed) < PhysicsBody.EPSILON) this.angularSpeed=0;
 	};
 	
@@ -134,6 +142,10 @@ var PhysicsBody = (function () {
 	
 	PhysicsBody.prototype.rotate = function(angle){
 		this.rotation+=angle;
+	};
+
+	PhysicsBody.prototype.gravitateTo = function (location,time){
+		this.speed = (location.substract(this.center).multiply(time/3000));
 	};
 
     return PhysicsBody;
@@ -206,6 +218,7 @@ var SpriteEntity = (function(){
 	};
 	
 	SpriteEntity.prototype.animate = function(world,time) {
+		this.body.gravitateTo(targetVector,time);
 		this.body.tick(time);
 	};
 
@@ -514,7 +527,7 @@ var Emitters = (function(){
 			count:[0,2],
 			strength: 0.1,
 			size:8,
-			shrink:0.7,
+			shrink:1,
 			colors: F
         };
 	}
@@ -581,7 +594,9 @@ var Projectiles = (function(){
 		this.body.friction = 0;
 		this.color = F.random();
 		this.emitter = new Emitters.FireEmitter(this,world);
-		this.emitter.params.gravityFactor = [-0.4,0.1];
+		//this.emitter.params.gravityFactor = [-0.4,0.1];
+		this.emitter.params.gravityFactor = [-0.1,0.1];
+		this.emitter.params.strength = 0.05;
 		this.emitter.params.count = [0,1];
 
 		this.resources = [this.emitter];
@@ -601,7 +616,7 @@ var Projectiles = (function(){
 			this.life-=time;
 			if (!this.emitter.world) this.emitter.world = world;
 			this.body.tick(time);
-			this.emitter.iterate();
+			if (Math.random()>0.5) this.emitter.iterate();
 		} else {
 			this.markForRemoval();
 		}
