@@ -6,11 +6,17 @@ var container = document.getElementById("canvasContainer");
 miniCanvas.width = 160;
 miniCanvas.height = 144;
 
-var aspect = miniCanvas.height / miniCanvas.width;
+var aspect = miniCanvas.width / miniCanvas.height;
 
 function calculateCanvasDimensions() {
-	maxiCanvas.width = container.clientHeight * aspect;
-	maxiCanvas.height = container.clientHeight;
+	if (container.clientHeight>container.clientWidth){
+		maxiCanvas.width = container.clientWidth;
+		maxiCanvas.height = container.clientWidth / aspect;
+	} else {
+		maxiCanvas.width = container.clientHeight * aspect;
+		maxiCanvas.height = container.clientHeight;
+	}
+	zoom = maxiCanvas.width/miniCanvas.width;
 }
 
 calculateCanvasDimensions();

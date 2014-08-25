@@ -75,7 +75,7 @@ maxiCanvas.addEventListener("mousedown",function(e){
         collisionType:Effects.Explosion.COLLIDE_GROUND
     });
 
-    exp.fire(e.offsetX/3,e.offsetY/3,world);
+    exp.fire(e.offsetX/zoom,e.offsetY/zoom,world);
 });
 
 /// SETUP ENTITIES
@@ -89,20 +89,23 @@ var ground = new GroundEntity(heightmap);
 world.groundElements.push(ground);
 
 var anim;
-var s = new SpriteSheet("img/atlastiny.png","atlas");
+var s = new SpriteSheet("img/atlas.png","atlas");
 var parrot;
 var tree;
 var onLoaded = function(loader){
 	var atlas = loader.spriteSheets["atlas"];
     // SpriteEntity(spritesheet,center,w,h,animations)
-    // getAnimation = function(tileWidth,tileHeight, frames, time, start, animwidth)
+    // getAnimation = function(tileWidth,tileHeight, frames, time, start, animwidth?)
     parrot = new SpriteEntity(atlas,new Vector2d(50,50),16,12,[
         [16,16,6,400,[27,0]]
         ]);
-    /*tree = new SpriteEntity(atlas,new Vector2d(160-15-6),9,12,[
+    tree = new SpriteEntity(atlas,new Vector2d(130,144-15-6),9,12,[
         [9,12,3,500,0]
-        ]);*/
+        ]);
+    tree.scale[0]=1;
+    tree.scale[1]=1;
 	world.addEntity(parrot,World.NO_COLLISION,World.CENTER);
+    world.addEntity(tree, World.NO_COLLISION, World.CENTER);
     var fireEmitter = new Emitters.FireEmitter(parrot,world);
     fireEmitter.start();
     var waterEmitter = new Emitters.WaterEmitter(parrot,world);
@@ -115,11 +118,14 @@ loader.start(10);
 // SETUP LOOP+FUNCTIONS
 var animate = function(time) {
     // animate animatables
+    parrot.body.gravitateTo(targetVector,time);
     world.animate(time);
 };
 
+var ctx = miniCanvas.getContext("2d");
+ctx.webkitImageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled = false;
 var render = function(time) {
-    var ctx = miniCanvas.getContext("2d");
     ctx.fillStyle = P[0];
     ctx.fillRect(0,0,miniCanvas.width,miniCanvas.height);
 	

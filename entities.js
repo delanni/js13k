@@ -191,6 +191,7 @@ var SpriteEntity = (function(){
 		this.currentAnimation = 0;
 		this.body = new PhysicsBody(center.copy(), new Vector2d(w/2,h/2));
 		this.spritesheet = spritesheet;
+		this.scale = [1,1];
 		this.loadAnimations(animations);
 	}
 
@@ -214,11 +215,10 @@ var SpriteEntity = (function(){
 	SpriteEntity.prototype.draw = function(ctx, world, time) {
 		var a = this.animations[this.currentAnimation];
 		var v = this.body.center.substract(this.body.corner);
-		a.drawFrame(ctx,v[0],v[1],time);
+		a.drawFrame(ctx,time,v[0],v[1],this.scale[0], this.scale[1]);
 	};
 	
 	SpriteEntity.prototype.animate = function(world,time) {
-		this.body.gravitateTo(targetVector,time);
 		this.body.tick(time);
 	};
 

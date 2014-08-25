@@ -46,7 +46,8 @@
 		left: 0;
 		width: 10%;
 		bottom: 0;
-		top: 0;		
+		top: 0;
+		float:right;
 	}
 
 	.buttons-left-side .button {
@@ -60,6 +61,7 @@
 		width: 10%;
 		bottom: 0;
 		top: 0;
+		float:left;
 	}
 
 	.buttons-right-side .button {
@@ -75,24 +77,24 @@
 <!-- resizing should be looked into, this is unsatisfactory
 http://www.html5rocks.com/en/tutorials/casestudies/gopherwoord-studios-resizing-html5-games/
 -->
-
-<div id="canvasContainer">
-	<canvas id="maxiCanvas"></canvas>
-	<canvas id="miniCanvas" width="160" height="144" ></canvas>
-</div>
-
 <div class="buttons-left-side">
 	<div class="button" id="0top"> </div>
 	<div class="button" id="1mid"> </div>
 	<div class="button" id="2bottom"></div>
 </div>
-
+<div id="canvasContainer">
+	<canvas id="maxiCanvas"></canvas>
+	<canvas id="miniCanvas" width="160" height="144" ></canvas>
+</div>
 <div class="buttons-right-side">
 	<div class="button" id="3bfire"></div>
 	<div class="button" id="4bair"></div>
 	<div class="button" id="5bwater"></div>
 	<div class="button" id="6bearth"></div>
 </div>
+
+
+
 
 <script type="text/javascript" src="sprites.js"></script>
 <script type="text/javascript" src="entities.js"></script>

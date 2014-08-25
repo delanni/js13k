@@ -7,8 +7,20 @@ var Frame = (function(){
 		this.h = h;
 	}
 	
-	Frame.prototype.drawItself = function(ctx,x,y){
-		ctx.drawImage(this.img,this.x,this.y,this.w,this.h,x,y,this.w,this.h);
+	Frame.prototype.drawItself = function(ctx,x,y,scalex,scaley){
+		// draw image: image, fromx, fromy, fromw, fromh, tox, toy, tow, toh
+		ctx.save();
+		ctx.translate(x+this.w/2,y+this.h/2);
+		if (scalex || scaley) {
+			scalex=scalex||1;
+			scaley=scaley||1;
+			ctx.scale(scalex,scaley);
+			ctx.translate(-this.w/2*scalex,-this.h/2*scaley);
+		} else {
+			ctx.translate(-this.w/2,-this.h/2);
+		}
+		ctx.drawImage(this.img,this.x,this.y,this.w,this.h,0,0,this.w,this.h);
+		ctx.restore();
 	};
 	
 	return Frame;
@@ -41,13 +53,13 @@ var Animation = (function(){
 	};
 	
 	// may be needed to offset the very first frame by -forTime not to skip it
-	Animation.prototype.drawFrame = function(ctx,x,y, forTime){
+	Animation.prototype.drawFrame = function(ctx,forTime,x,y,scalex,scaley){
 		if(!this.isReady) this.init();
 		var t=  (this.remainder+forTime);
 		var frameStep = Math.floor(t / this.frameLength);
 		this.remainder = t%this.frameLength;
 		var frame = this.skip(frameStep);
-		frame.drawItself(ctx,x,y);
+		frame.drawItself(ctx,x,y,scalex,scaley);
 	};
 	
 	Animation.prototype.skip = function(frames){
