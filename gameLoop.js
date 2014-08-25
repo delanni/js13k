@@ -59,8 +59,6 @@ Array.prototype.slice.call(document.getElementsByClassName("button")).forEach(fu
                 targetVector = bottom;
             break;
             case 3:
-                var fb = new Projectiles.Fireball(parrot.body.center, [0.2,0], 3, world);
-                world.addEntity(fb, World.COLLIDE_ALL, World.CENTER);
             break;
             case 4:
             break;
@@ -102,23 +100,16 @@ var onLoaded = function(loader){
         [16,16,6,400,[27,0]]
         ]);
     tree = new SpriteEntity(atlas,new Vector2d(130,144-15-6),9,12,[
-        [9,12,3,800,0]
+        [9,12,3,500,0]
         ]);
     tree.scale[0]=1;
     tree.scale[1]=1;
-    tree.collideAction = function(other){
-        if (other.kind == EntityKind.FIREBALL){
-            if (!tree.resources.length || tree.resources.every(function(E){return E.kind != EntityKind.FIREEMITTER})){
-                var fireEmitter = new Emitters.FireEmitter(tree,world);
-                fireEmitter.interval = 70;
-                fireEmitter.params.size = [4,6];
-                tree.resources.push(fireEmitter);
-                fireEmitter.start();
-            }
-        }
-    }
 	world.addEntity(parrot,World.NO_COLLISION,World.CENTER);
-    world.addEntity(tree, World.COLLIDE_ALL, World.CENTER);
+    world.addEntity(tree, World.NO_COLLISION, World.CENTER);
+    var fireEmitter = new Emitters.FireEmitter(parrot,world);
+    fireEmitter.start();
+    var waterEmitter = new Emitters.WaterEmitter(parrot,world);
+    waterEmitter.start();
 }
 var loader = new SpriteSheetLoader(onLoaded);
 loader.addItem(s);
