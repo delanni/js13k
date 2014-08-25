@@ -2,10 +2,15 @@
 
 <html>
 <head>
-<title>Canvas Basics</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Incredibird</title>
 <style type="text/css">
 	body {
 		margin: 0;
+		overflow:hidden;
+		width:100%;
+		height:100%;
+		background: grey;
 	}
 	#left,#base,#right {
 		display:inline;
@@ -14,30 +19,60 @@
 		background: #9bbc0f;
 		width:100px;
 	}
+	#miniCanvas {
+		display:none;
+	}
+	#maxiCanvas {
+		visibility: hidden;
+	}
+	#statusbar {
+		background: #8bac0f;
+		height: 64px;
+		width: 480px;
+	}
+	.button {
+		width: 100%;
+		height: 100px;
+		margin-top: 10px;
+		margin-bottom: 10px;
+		background: #0f380f;
+	}
+	#wrapper {
+		margin:auto;
+	}
 </style>
 </head>
 
 <body>
 
-<table>
+<table id="wrapper" height="500" border="0" cellpadding="0" cellspacing="0">
     <tbody>
         <tr>
             <td class="buttons">
-                <div id="left"></div>
+                <div id="left">
+					<div class="button" id="up" />     </div>
+					<div class="button" id="down" /> </div>
+					<div class="button" id="pause" /></div>
+				</div>
             </td>
             <td>
-                <div id="base">
-                    <canvas id="maxiCanvas" width="480" height="432"></canvas>
-                </div>
+                <canvas id="maxiCanvas" width="480" height="432"></canvas>
+				<div id="statusbar"></div>
             </td>
             <td class="buttons">
-                <div id="right"></div>
+                <div id="right">
+					<div class="button" id="bfire" >     </div>
+					<div class="button" id="bair" >      </div>
+					<div class="button" id="bwater" >  </div>
+					<div class="button" id="bearth" >  </div>
+				</div>
             </td>
         </tr>
     </tbody>
 </table>
-
+<canvas id="miniCanvas" width="160" height="144" ></canvas>
 <script>
+	// code comes here
 </script>
 <script type="text/javascript" src="sprites.js"></script>
 <script type="text/javascript" src="entities.js"></script>
