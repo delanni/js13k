@@ -181,6 +181,12 @@ var Entity = (function () {
 	return Entity;
 })();
 */
+var EntityKind = {
+	FIREBALL :1,
+	PLAYER : 0,
+	FIREEMITTER: 2,
+	WATEREMITTER:3
+}
 
 var SpriteEntity = (function(){
 	function SpriteEntity(spritesheet,center,w,h,animations){
@@ -193,6 +199,7 @@ var SpriteEntity = (function(){
 		this.spritesheet = spritesheet;
 		this.scale = [1,1];
 		this.loadAnimations(animations);
+		this.resources = [];
 	}
 
 	SpriteEntity.prototype.loadAnimations = function(animations){
@@ -402,7 +409,7 @@ var World = (function () {
 		ei,ej;
 		for(var i =0 ; i < lt; i++){
 			ei = ents[i];
-			if (!ei) continue;
+			if (!ei || ei.isMarked) continue;
 			for(j=0;j<glt;j++){
 				ej = gents[j];
 				if(!ei.isOnGround && ej.collidesWith(ei.body)) ei.collideGround(ej);
@@ -413,9 +420,10 @@ var World = (function () {
 		lt = ents.length;
 		for(var i =0 ; i < lt; i++){
 			ei = ents[i];
-			if (!ei) continue;
+			if (!ei || ei.isMarked || !ei.isAlive) continue;
 			for(j=i+1;j<lt;j++){
 				ej = ents[j];
+				if (!ej || ej.isMarked || !ej.isAlive) continue;
 				if(ei.body.intersects(ej.body)) {ei.collideAction(ej); ej.collideAction(ei);}
 			}
 		}
@@ -516,6 +524,7 @@ var Effects = (function(){
 
 var Emitters = (function(){
 	function FireEmitter(entity, world){
+		this.kind = EntityKind.FIREEMITTER;
 		this.intervalId = 0;
 		this.interval = 50;
 		this.entity = entity;
@@ -585,6 +594,7 @@ var Emitters = (function(){
 
 var Projectiles = (function(){
 	function Fireball(center,speed,size,world) {
+		this.kind = EntityKind.FIREBALL;
 		this.isVisible = true;
 		this.isAlive = true;
 		this.isMarked = false;
