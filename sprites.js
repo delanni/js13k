@@ -10,12 +10,12 @@ var Frame = (function(){
 	Frame.prototype.drawItself = function(ctx,x,y,scalex,scaley){
 		// draw image: image, fromx, fromy, fromw, fromh, tox, toy, tow, toh
 		ctx.save();
-		ctx.translate(x,y);
+		ctx.translate(x+this.w/2,y+this.h/2);
 		if (scalex || scaley) {
 			scalex=scalex||1;
 			scaley=scaley||1;
 			ctx.scale(scalex,scaley);
-			ctx.translate((-this.w/2)*scalex,(-this.h/2)*scaley);
+			ctx.translate(-this.w/2*scalex,-this.h/2*scaley);
 		} else {
 			ctx.translate(-this.w/2,-this.h/2);
 		}
