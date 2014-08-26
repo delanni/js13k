@@ -99,7 +99,7 @@ var onLoaded = function(loader){
     // SpriteEntity(spritesheet,center,w,h,animations)
     // getAnimation = function(tileWidth,tileHeight, frames, time, start, animwidth?)
     parrot = new SpriteEntity(atlas,new Vector2d(50,50),16,12,[
-        [16,16,6,400,[27,0]]
+        [16,12,6,400,[27,0]]
         ]);
     tree = new SpriteEntity(atlas,new Vector2d(130,144-15-6),9,12,[
         [9,12,3,800,0]

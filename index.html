@@ -15,6 +15,14 @@
 		height:100%;
 		background: grey;
 	}
+	canvas {
+	    image-rendering: optimizeSpeed;             // Older versions of FF
+	    image-rendering: -moz-crisp-edges;          // FF 6.0+
+	    image-rendering: -webkit-optimize-contrast; // Webkit (non standard naming)
+	    image-rendering: -o-crisp-edges;            // OS X & Windows Opera (12.02+)
+	    image-rendering: crisp-edges;               // Possible future browsers.
+	    -ms-interpolation-mode: nearest-neighbor;   // IE (non standard naming)
+	}
 	.buttons {
 		background: #9bbc0f;
 		width:100px;
@@ -29,7 +37,7 @@
 	}
 
 	#miniCanvas {
-		display:none;
+		/*display:none;*/
 	}
 	#maxiCanvas {
 		display: block;
@@ -92,7 +100,6 @@ http://www.html5rocks.com/en/tutorials/casestudies/gopherwoord-studios-resizing-
 	<div class="button" id="5bwater"></div>
 	<div class="button" id="6bearth"></div>
 </div>
-
 
 
 

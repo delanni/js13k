@@ -9,7 +9,7 @@ var Frame = (function(){
 	
 	Frame.prototype.drawItself = function(ctx,x,y,scalex,scaley){
 		// draw image: image, fromx, fromy, fromw, fromh, tox, toy, tow, toh
-		ctx.save();
+		/*ctx.save();
 		ctx.translate(x+this.w/2,y+this.h/2);
 		if (scalex || scaley) {
 			scalex=scalex||1;
@@ -20,7 +20,8 @@ var Frame = (function(){
 			ctx.translate(-this.w/2,-this.h/2);
 		}
 		ctx.drawImage(this.img,this.x,this.y,this.w,this.h,0,0,this.w,this.h);
-		ctx.restore();
+		ctx.restore();*/
+		ctx.drawImage(this.img,this.x,this.y,this.w,this.h,x,y,this.w,this.h);
 	};
 	
 	return Frame;
