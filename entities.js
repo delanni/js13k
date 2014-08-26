@@ -193,6 +193,7 @@ var SpriteEntity = (function(){
 		this.isVisible = true;
 		this.isAlive = true;
 		this.isMarked=false;
+		this.life = Infinity;
 		this.animations = [];
 		this.currentAnimation = 0;
 		this.body = new PhysicsBody(center.copy(), new Vector2d(w/2,h/2));
@@ -227,6 +228,8 @@ var SpriteEntity = (function(){
 	
 	SpriteEntity.prototype.animate = function(world,time) {
 		this.body.tick(time);
+		this.life-=time;
+		if (this.life<0) this.markForRemoval();
 	};
 
 	SpriteEntity.prototype.collideAction = function(other){
@@ -509,11 +512,10 @@ var Effects = (function(){
 		}
 	}
 
-	Explosion.prototype.fire = function(x,y,world){
+	Explosion.prototype.fire = function(xy,world){
 		for(var i = 0 ; i < this.particles.length; i++){
 			var part = this.particles[i];
-			part.body.center[0]=x;
-			part.body.center[1]=y;
+			part.body.center.set(xy);
 			world.addEntity(part,this.collisionType,this.zIndex);
 		}
 	};
@@ -554,7 +556,7 @@ var Emitters = (function(){
 	FireEmitter.prototype.iterate = function(emitter){
 		emitter = emitter||this;
         var exp = new Effects.Explosion(emitter.params);
-        exp.fire(emitter.entity.body.center[0],emitter.entity.body.center[1],emitter.world);
+        exp.fire(emitter.entity.body.center,emitter.world);
     };
 
     function WaterEmitter(entity,world){
@@ -586,7 +588,7 @@ var Emitters = (function(){
 			shrink:0.3,
 			colors: T
         });
-        exp.fire(emitter.entity.body.center[0],emitter.entity.body.center[1],emitter.world);
+        exp.fire(emitter.entity.body.center,emitter.world);
     };
 
 	return {
@@ -636,7 +638,10 @@ var Projectiles = (function(){
 	};
 
 	Fireball.prototype.collideAction = function(other){
-
+		if (other.kind == this.kind) return;
+		this.markForRemoval();
+		var exp = new Effects.Explosion({gravityFactor:.7,colors:F,offset:this.body.speed.multiply(.5),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.6});
+		exp.fire(this.body.center,world);
 	};
 
 	Fireball.prototype.applyGravity = function(gravityVector,time){

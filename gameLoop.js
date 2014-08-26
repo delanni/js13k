@@ -8,8 +8,8 @@ var r = (function() {
 (screen.msLockOrientation&& screen.msLockOrientation("landscape-primary"))||(screen.mozLockOrientation&& screen.mozLockOrientation("landscape-primary"));
 
 /// SETUP INPUTS
-var driveVector= new Vector2d(0,0), topV = new Vector2d(30,24), mid = new Vector2d(30,73), bottom = new Vector2d(30,121);
-var targetVector = new Vector2d(50,50);
+var driveVector= new Vector2d(0,0), topV = new Vector2d(30,24), mid = new Vector2d(30,73), bottom = new Vector2d(30,118);
+var targetVector = mid;
 var readInputs = function(time){
     driveVector[0]=driveVector[1]=0;
 
@@ -106,21 +106,28 @@ var onLoaded = function(loader){
     tree = new SpriteEntity(atlas,new Vector2d(130,144-15-6),9,12,[
         [9,12,3,800,0]
         ]);
-    tree.scale[0]=1;
-    tree.scale[1]=1;
-    tree.collideAction = function(other){
+    tree2 = new SpriteEntity(atlas,new Vector2d(130,144-15-6),9,12,[
+        [9,12,3,800,0]
+        ]);
+    tree.collideAction = tree2.collideAction = function(other){
+        var _thetree = this;
         if (other.kind == EntityKind.FIREBALL){
-            if (!tree.resources.length || tree.resources.every(function(E){return E.kind != EntityKind.FIREEMITTER})){
-                var fireEmitter = new Emitters.FireEmitter(tree,world);
+            if (!this.resources.length || this.resources.every(function(E){return E.kind != EntityKind.FIREEMITTER})){
+                var fireEmitter = new Emitters.FireEmitter(_thetree,world);
                 fireEmitter.interval = 70;
                 fireEmitter.params.size = [4,6];
-                tree.resources.push(fireEmitter);
+                _thetree.resources.push(fireEmitter);
                 fireEmitter.start();
+                _thetree.life = 3000;
             }
         }
     }
+
+    tree2.body.center[0]-=50;
+
 	world.addEntity(parrot,World.NO_COLLISION,World.CENTER);
     world.addEntity(tree, World.COLLIDE_ALL, World.CENTER);
+    world.addEntity(tree2, World.COLLIDE_ALL, World.CENTER);
 }
 var loader = new SpriteSheetLoader(onLoaded);
 loader.addItem(s);
@@ -136,6 +143,8 @@ var animate = function(time) {
 var ctx = miniCanvas.getContext("2d");
 ctx.webkitImageSmoothingEnabled = false;
 ctx.imageSmoothingEnabled = false;
+maxiCanvas.getContext("2d").imageSmoothingEnabled = false;
+maxiCanvas.getContext("2d").webkitImageSmoothingEnabled = false;
 var render = function(time) {
     ctx.fillStyle = P[0];
     ctx.fillRect(0,0,miniCanvas.width,miniCanvas.height);

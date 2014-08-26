@@ -46,3 +46,7 @@ Object.prototype.markForRemoval= function(){
 		this.resources[i].stop();
 	}
 }
+
+Object.prototype.clone = function(){
+	return JSON.parse(JSON.stringify(this));
+}

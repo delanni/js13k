@@ -72,12 +72,12 @@ var Animation = (function(){
 })();
 
 var SpriteSheet = (function(){
-	function SpriteSheet(url, key){
-		this.url = url;
-		this.key = key||url;
+	function SpriteSheet(image, key){
+		if(typeof image=="string") this.url = image;
+		else this.img = image;
+		this.key = key || image.id || image;
 		this.w = 0;
 		this.h = 0;
-		this.img = null;
 		this.isReady = false;
 		var spr = this;
 	}
@@ -96,7 +96,15 @@ var SpriteSheet = (function(){
 	};
 	
 	SpriteSheet.prototype.loadImage = function(callback, caller){
-		this.img = new Image();
+		if (this.img) {
+			this.isReady = true;
+			this.width = this.img.width;
+			this.height = this.img.height;
+			callback.apply(caller,[this]);
+			return;
+		}
+		
+		this.img = new Image();	
 		var spr = this;
 		this.img.onload = function(){
 			spr.isReady = true;
