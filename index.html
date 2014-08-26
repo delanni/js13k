@@ -2,7 +2,8 @@
 
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes">
 <title>Incredibird</title>
@@ -26,9 +27,7 @@
 	
 	#canvasContainer {
 		background : yellow;
-		position: absolute;
-		left: 10%;
-		right: 10%;
+		display:table-cell;
 		top: 0;
 		bottom: 0;
 		margin:auto;
@@ -40,43 +39,36 @@
 	#maxiCanvas {
 		display: block;
 		margin: auto;
+		width:100%;
+		height:93%;
 	}
 
-	.buttons{
+	.buttons {
 		display: table-cell;
 		background: #9bbc0f;
-		width:100px;
-	}
-	
-	.left-side {
-		position: absolute;
-		left: 0;
-		width: 10%;
-		bottom: 0;
-		top: 0;
-		float:right;
-	}
-
-	.right-side {
-		position: absolute;
-		right: 0;
-		width: 10%;
-		bottom: 0;
-		top: 0;
-		float:left;
+		width:15%;
+		vertical-align: middle;
 	}
 
 	.button {
-		width: 100%;				
+		width: 90%;				
 		background: #0f380f;
-		margin-top: 0.5em;
-		height: 25%;
+		margin:auto;
+		height: 20%;
+		margin-top: 15%;
+		margin-bottom:15%;
+		border-radius: 3px;
 	}
 	
 	#statsbar {
 		width: 100%;
 		height: 7%;
 		display:block;
+		margin:auto;
+	}
+	
+	#wrapper {
+		display: table;
 		margin:auto;
 	}
 </style>
@@ -91,7 +83,7 @@
 	</div>
 	<div id="canvasContainer">
 		<canvas id="maxiCanvas"></canvas>
-		<div id="statsbar"></div>
+		<div id="statsbar">csa</div>
 		<canvas id="miniCanvas" width="160" height="144" ></canvas>
 	</div>
 	<div class="buttons right-side">
