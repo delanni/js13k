@@ -4,6 +4,8 @@ var r = (function() {
         window.setTimeout(callback, 1000 / 60,  1000 / 60);
     };
 })();
+var lo= screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation;
+if (lo) lo("landscape-primary");
 
 /// SETUP INPUTS
 var driveVector= new Vector2d(0,0), topV = new Vector2d(30,24), mid = new Vector2d(30,73), bottom = new Vector2d(30,121);
