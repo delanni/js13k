@@ -315,6 +315,7 @@ var GroundEntity = (function(){
 		ctx.beginPath();
 		ctx.moveTo(0, this.height);
 		for(var i = 0; i < this.heightmap.length; i++){
+			if (i!=0&& this.heightmap[i]==this.heightmap[i+1]) continue;
 			ctx.lineTo(i,this.height-heightmap[i]);
 		}
 		ctx.lineTo(this.width+1,this.height);
