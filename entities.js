@@ -542,7 +542,8 @@ var Emitters = (function(){
 	}
 
 	FireEmitter.prototype.start = function(){
-		this.intervalId = setInterval(this.iterate,this.interval,this);
+		var _this = this;
+		this.intervalId = setInterval(function(){_this.iterate(_this)},this.interval);
 	};
 
 	FireEmitter.prototype.stop = function(){
@@ -563,7 +564,8 @@ var Emitters = (function(){
     }
 
     WaterEmitter.prototype.start = function(){
-		this.intervalId = setInterval(this.iterate,this.interval,this);
+    		var _this=  this;
+		this.intervalId = setInterval(function(){_this.iterate(_this)},this.interval);
 	};
 
 	WaterEmitter.prototype.stop = function(){
