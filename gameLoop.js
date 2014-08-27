@@ -49,7 +49,7 @@ document.body.addEventListener("keyup", function (e) {
     readInputs.keys[e.keyCode] = false;
 });
 Array.prototype.slice.call(document.getElementsByClassName("button")).forEach(function(button){
-    button.onclick = button.ontouchstart = function(){
+    button.onmousedown = button.ontouchstart = function(){
         switch(+this.id[0]){
             case 0:
                 targetVector = topV;
