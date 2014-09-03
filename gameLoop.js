@@ -85,10 +85,7 @@ maxiCanvas.addEventListener("mousedown",function(e){
 /// SETUP ENTITIES
 var world = new World();
 
-var heightmap = [];
-for(var ix = 0; ix< 160; ix++){
-	heightmap.push(randBetween(15,15,1));
-}
+var heightmap = 15;
 var ground = new GroundEntity(heightmap);
 world.groundElements.push(ground);
 
@@ -114,10 +111,8 @@ var onLoaded = function(loader){
         if (other.kind == EntityKind.FIREBALL){
             if (!this.resources.length || this.resources.every(function(E){return E.kind != EntityKind.FIREEMITTER})){
                 var fireEmitter = new Emitters.FireEmitter(_thetree,world);
-                fireEmitter.interval = 70;
                 fireEmitter.params.size = [4,6];
                 _thetree.resources.push(fireEmitter);
-                fireEmitter.start();
                 _thetree.life = 3000;
             }
         }
