@@ -151,56 +151,55 @@ var PhysicsBody = (function () {
     return PhysicsBody;
 })();
 
-/*
+
 var Entity = (function () {
 	function Entity() {
-		this.isVisible = true;
-		this.isAlive = true;
-		this.isMarked=false;
-		this.body = new PhysicsBody(center.copy(), new Vector2d(w/2,h/2));
+		this.resources = [];
 	}
-
-	Entity.prototype.draw = function(ctx, world, time) {
-	};
+	
+	Entity.prototype.kind = -1;
+	Entity.prototype.isVisible = true;
+	Entity.prototype.isAlive = true;
+	Entity.prototype.isMarked=false;
+	Entity.prototype.life = Infinity;
+	Entity.prototype.draw = noop;
+	Entity.prototype.collideAction = noop;
+	Entity.prototype.applyGravity = noop;
+	Entity.prototype.collideGround = noop;
 	
 	Entity.prototype.animate = function(world,time) {
+		if (!this.isAlive) return;
 		this.body.tick(time);
-	};
-
-	Entity.prototype.collideAction = function(other){
-
-	};
-
-	Entity.prototype.applyGravity = function(gravityVector,time){
-		
-	};
-
-	Entity.prototype.collideGround = function (other){
+		if (this.onAnimate) this.onAnimate(world,time);
+		if (this.resources) this.resources.forEach(function(e){e.tick(world,time);});
+		this.life-=time;
+		if (this.life<0) this.markForRemoval();
 	};
 
 	return Entity;
 })();
-*/
+
 var EntityKind = {
 	FIREBALL :1,
 	PLAYER : 0,
 	FIREEMITTER: 2,
-	WATEREMITTER:3
+	WATEREMITTER:3,
+	WATERBOLT: 4,
+	THUNDERBOLT : 5,
+	EARTHBOMB: 6
 }
 
-var SpriteEntity = (function(){
-	function SpriteEntity(spritesheet,center,w,h,animations){
-		this.isVisible = true;
-		this.isAlive = true;
-		this.isMarked=false;
-		this.life = Infinity;
+var SpriteEntity = (function(_super){
+	__extends(SpriteEntity, _super);
+
+	function SpriteEntity(spritesheet,center,w,h,animations){	
+		_super.call(this);
 		this.animations = [];
 		this.currentAnimation = 0;
 		this.body = new PhysicsBody(center.copy(), new Vector2d(w/2,h/2));
 		this.spritesheet = spritesheet;
 		this.scale = [1,1];
 		this.loadAnimations(animations);
-		this.resources = [];
 	}
 
 	SpriteEntity.prototype.loadAnimations = function(animations){
@@ -225,33 +224,14 @@ var SpriteEntity = (function(){
 		var v = this.body.center.substract(this.body.corner);
 		a.drawFrame(ctx,time,v[0],v[1],this.scale[0], this.scale[1]);
 	};
-	
-	SpriteEntity.prototype.animate = function(world,time) {
-		this.body.tick(time);
-		this.life-=time;
-		if (this.life<0) this.markForRemoval();
-	};
-
-	SpriteEntity.prototype.collideAction = function(other){
-
-	};
-
-	SpriteEntity.prototype.applyGravity = function(gravityVector,time){
-		
-	};
-
-	SpriteEntity.prototype.collideGround = function (other){
-		
-	};
 
 	return SpriteEntity;
-})();
+})(Entity);
 
-var Particle = (function() {
+var Particle = (function(_super) {
+	__extends(Particle,_super);
+
 	function Particle(center,size,color,life,shrink){
-		this.isVisible = true;
-		this.isAlive = true;
-		this.isMarked = false;
 		this.color = color;
 		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
 		this.life = life || 300;
@@ -269,18 +249,8 @@ var Particle = (function() {
 		ctx.restore();
 	};
 	
-	Particle.prototype.animate = function(world,time) {
-		if (this.life>=0){
-			this.life-=time;
+	Particle.prototype.onAnimate = function(world,time) {
 			this.body.corner.doSubstract([this.shrinkage*time,this.shrinkage*time]);
-			this.body.tick(time);
-		} else {
-			if (this.life<=0) this.markForRemoval();
-		}
-	};
-
-	Particle.prototype.collideAction = function(other){
-
 	};
 
 	Particle.prototype.applyGravity = function(gravityVector,time){
@@ -296,7 +266,7 @@ var Particle = (function() {
 	};
 
 	return Particle;
-})();
+})(Entity);
 
 var GroundEntity = (function(){
 	function GroundEntity(heightmap, width,height){
@@ -317,22 +287,25 @@ var GroundEntity = (function(){
 	    ctx.fillStyle = this.color;
 		ctx.beginPath();
 		ctx.moveTo(0, this.height);
-		for(var i = 0; i < this.heightmap.length; i++){
+		/*for(var i = 0; i < this.heightmap.length; i++){
 			if (i!=0&& this.heightmap[i]==this.heightmap[i+1]) continue;
 			ctx.lineTo(i,this.height-heightmap[i]);
 		}
+		*/
+		ctx.lineTo(0,this.height-heightmap);
+		ctx.lineTo(this.width,this.height-heightmap);
 		ctx.lineTo(this.width+1,this.height);
 		ctx.closePath();
 		ctx.fill();
 		ctx.restore();
 	};
 	
-	GroundEntity.prototype.animate = function(world,time) {
-	};
+	GroundEntity.prototype.animate = noop;
 
 	GroundEntity.prototype.collidesWith = function(body){
 		var ltwh = body.getLTWH();
-		var max = this.heightmap.maxInRange(clamp(ltwh[0],0,this.width), clamp(ltwh[0]+ltwh[2],0,this.width));
+		//var max = this.heightmap.maxInRange(clamp(ltwh[0],0,this.width), clamp(ltwh[0]+ltwh[2],0,this.width));
+		var max = this.heightmap;
 		if (max+ltwh[1]+ltwh[3]>this.height) return true;
 		return false;
 	};
@@ -386,7 +359,7 @@ var World = (function () {
 			}
 		});
 
-		if(this.roundCount++>200){
+		if(this.roundCount++>30){
 			this.clear();
 		}
 	};
@@ -477,7 +450,9 @@ var World = (function () {
 })();
 
 var Effects = (function(){
-	function Explosion(params){
+	function Explosion(params, timeFactor){
+		//timeFactor = timeFactor || (1000/60);
+		var tf = (timeFactor / (1000/60))||1;
 		var o = this;
 		params = params || {};
 		params.mixin({
@@ -500,6 +475,7 @@ var Effects = (function(){
 
 		var count = params.count;
 		if (count instanceof Array) count = randBetween(count[0],count[1]);
+		count = Math.ceil(count * tf);
 		for(var i=0;i<count;i++){
 			var part = new Particle(params.center.copy(),
 				randBetween(params.size),
@@ -528,8 +504,6 @@ var Effects = (function(){
 var Emitters = (function(){
 	function FireEmitter(entity, world){
 		this.kind = EntityKind.FIREEMITTER;
-		this.intervalId = 0;
-		this.interval = 50;
 		this.entity = entity;
 		this.world = world;
 		this.params = {
@@ -544,40 +518,10 @@ var Emitters = (function(){
         };
 	}
 
-	FireEmitter.prototype.start = function(){
-		var _this = this;
-		this.intervalId = setInterval(function(){_this.iterate(_this)},this.interval);
-	};
-
-	FireEmitter.prototype.stop = function(){
-		if (this.intervalId) clearInterval(this.intervalId);
-	};
-
-	FireEmitter.prototype.iterate = function(emitter){
-		emitter = emitter||this;
-        var exp = new Effects.Explosion(emitter.params);
-        exp.fire(emitter.entity.body.center,emitter.world);
-    };
-
     function WaterEmitter(entity,world){
-    	this.intervalId = 0;
-		this.interval = 50;
 		this.entity = entity;
 		this.world = world;
-    }
-
-    WaterEmitter.prototype.start = function(){
-    		var _this=  this;
-		this.intervalId = setInterval(function(){_this.iterate(_this)},this.interval);
-	};
-
-	WaterEmitter.prototype.stop = function(){
-		if (this.intervalId) clearInterval(this.intervalId);
-	};
-
-	WaterEmitter.prototype.iterate = function(emitter){
-		emitter = emitter||this;
-        var exp = new Effects.Explosion({
+		this.params = {
             gravityFactor: [0.1,0.4],
             collisionType: World.COLLIDE_GROUND,
 			life:[600,1000],
@@ -587,8 +531,12 @@ var Emitters = (function(){
 			size:4,
 			shrink:0.3,
 			colors: T
-        });
-        exp.fire(emitter.entity.body.center,emitter.world);
+        };
+    }
+	
+	FireEmitter.prototype.tick = WaterEmitter.prototype.tick = function(world,time){
+        var exp = new Effects.Explosion(this.params);
+        exp.fire(this.entity.body.center,this.world);
     };
 
 	return {
@@ -597,12 +545,11 @@ var Emitters = (function(){
 	}
 })();
 
-var Projectiles = (function(){
+var Projectiles = (function(_super){
+	__extends(Fireball,_super);
 	function Fireball(center,speed,size,world) {
+		_super.call(this);
 		this.kind = EntityKind.FIREBALL;
-		this.isVisible = true;
-		this.isAlive = true;
-		this.isMarked = false;
 		this.life = 1500;
 		this.body = new PhysicsBody(center.copy(), new Vector2d(4,4));
 		this.body.speed.doAdd(speed);
@@ -614,7 +561,7 @@ var Projectiles = (function(){
 		this.emitter.params.strength = 0.05;
 		this.emitter.params.count = [0,1];
 
-		this.resources = [this.emitter];
+		this.resources.push(this.emitter);
 	}
 
 	Fireball.prototype.draw = function(ctx, world, time) {
@@ -625,17 +572,6 @@ var Projectiles = (function(){
 		ctx.fillRect(-w/2,-w/2,w,w);
 		ctx.restore();
 	};
-	
-	Fireball.prototype.animate = function(world,time) {
-		if (this.life>=0){
-			this.life-=time;
-			if (!this.emitter.world) this.emitter.world = world;
-			this.body.tick(time);
-			if (Math.random()>0.5) this.emitter.iterate();
-		} else {
-			this.markForRemoval();
-		}
-	};
 
 	Fireball.prototype.collideAction = function(other){
 		if (other.kind == this.kind) return;
@@ -644,14 +580,7 @@ var Projectiles = (function(){
 		exp.fire(this.body.center,world);
 	};
 
-	Fireball.prototype.applyGravity = function(gravityVector,time){
-		
-	};
-
-	Fireball.prototype.collideGround = function (other){
-	};
-
 	return {
 		Fireball : Fireball
 	}
-})();
+})(Entity);
