@@ -182,6 +182,7 @@ var Entity = (function () {
 var EntityKind = {
 	FIREBALL :1,
 	PLAYER : 0,
+	SPRITE : 10,
 	FIREEMITTER: 2,
 	WATEREMITTER:3,
 	WATERBOLT: 4,
@@ -194,6 +195,7 @@ var SpriteEntity = (function(_super){
 
 	function SpriteEntity(spritesheet,center,w,h,animations){	
 		_super.call(this);
+		this.kind = EntityKind.SPRITE;
 		this.animations = [];
 		this.currentAnimation = 0;
 		this.body = new PhysicsBody(center.copy(), new Vector2d(w/2,h/2));
@@ -451,7 +453,6 @@ var World = (function () {
 
 var Effects = (function(){
 	function Explosion(params, timeFactor){
-		//timeFactor = timeFactor || (1000/60);
 		var tf = (timeFactor / (1000/60))||1;
 		var o = this;
 		params = params || {};
@@ -530,7 +531,7 @@ var Emitters = (function(){
 			strength: 0.01,
 			size:4,
 			shrink:0.3,
-			colors: T
+			colors: W
         };
     }
 	
@@ -547,11 +548,13 @@ var Emitters = (function(){
 
 var Projectiles = (function(_super){
 	__extends(Fireball,_super);
+	__extends(Waterbolt,_super);
+	
 	function Fireball(center,speed,size,world) {
 		_super.call(this);
 		this.kind = EntityKind.FIREBALL;
 		this.life = 1500;
-		this.body = new PhysicsBody(center.copy(), new Vector2d(4,4));
+		this.body = new PhysicsBody(center.copy(), new Vector2d(size,size));
 		this.body.speed.doAdd(speed);
 		this.body.friction = 0;
 		this.color = F.random();
@@ -579,8 +582,39 @@ var Projectiles = (function(_super){
 		var exp = new Effects.Explosion({gravityFactor:.7,colors:F,offset:this.body.speed.multiply(.5),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.6});
 		exp.fire(this.body.center,world);
 	};
+	
+	function Waterbolt(center,speed,size,world){
+		_super.call(this);
+		this.kind = EntityKind.WATERBOLT;
+		this.life = 1500;
+		this.body = new PhysicsBody(center.copy(), new Vector2d(size,size));
+		this.body.speed.doAdd(speed);
+		this.body.friction = 0;
+		this.color = W.random();
+		this.emitter = new Emitters.WaterEmitter(this,world);
+		this.emitter.params.count = [-1,1];
+
+		this.resources.push(this.emitter);
+	}
+	
+	Waterbolt.prototype.collideAction = function(other){
+		if (other.kind == this.kind) return;
+		this.markForRemoval();
+		var exp = new Effects.Explosion({gravityFactor:.8,colors:W,offset:this.body.speed.multiply(.25),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.8});
+		exp.fire(this.body.center,world);
+	};
+	
+	Waterbolt.prototype.draw = function(ctx, world, time) {
+		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2];
+		ctx.save();
+		ctx.translate(l+w/2,t+w/2);
+	    ctx.fillStyle = this.color;
+		ctx.fillRect(-w/2,-w/2,w,w);
+		ctx.restore();
+	};
 
 	return {
-		Fireball : Fireball
+		Fireball : Fireball,
+		Waterbolt : Waterbolt
 	}
 })(Entity);
