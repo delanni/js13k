@@ -41,12 +41,16 @@ Object.prototype.markForRemoval= function(){
 	this.isVisible = false;
 	this.isAlive = false;
 	this.isMarked = true;
-	if (this.resources){
-		for(var i=0;i<this.resources.length;i++)
-		this.resources[i].stop();
-	}
+	if (this.resources) this.resources.length=0;
 }
 
 Object.prototype.clone = function(){
 	return JSON.parse(JSON.stringify(this));
 }
+
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
