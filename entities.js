@@ -145,7 +145,7 @@ var PhysicsBody = (function () {
 	};
 
 	PhysicsBody.prototype.gravitateTo = function (location,time){
-		time = Math.min(time,0.7);
+		time = Math.min(time,77);
 		this.speed = (location.substract(this.center).multiply(time/3000));
 	};
 
