@@ -73,6 +73,7 @@ Array.prototype.slice.call(document.getElementsByClassName("button")).forEach(fu
             case 6:
             break;
         }
+        return true;
     }
 });
 
@@ -114,6 +115,7 @@ var onLoaded = function(loader){
             if (!this.resources.length || this.resources.every(function(E){return E.kind != EntityKind.FIREEMITTER})){
                 var fireEmitter = new Emitters.FireEmitter(_thetree,world);
                 fireEmitter.params.size = [4,6];
+                fireEmitter.params.strength*=1.5;
                 _thetree.resources.push(fireEmitter);
                 _thetree.life = 3000;
             }
@@ -150,6 +152,7 @@ var render = function(time) {
     maxiCanvas.copyFrom(miniCanvas);
 };
 
+var timefactor = 1;
 var meter = new FPSMeter();
 var gameLoop = function(n) {
     meter.tickStart();
@@ -161,10 +164,11 @@ var gameLoop = function(n) {
         meter.tick();
         return;
     }
+    var time = (n-gameLoop.lastTime)*timefactor;
     r(gameLoop);
-    readInputs(n-gameLoop.lastTime);
-    animate(n-gameLoop.lastTime);
-    render(n-gameLoop.lastTime);
+    readInputs(time);
+    animate(time);
+    render(time);
     gameLoop.lastTime = n;
     meter.tick();
 };

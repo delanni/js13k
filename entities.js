@@ -72,7 +72,7 @@ var PhysicsBody = (function () {
 		this.acceleration = acceleration || new Vector2d();
 		this.rotation = 0;
 		this.angularSpeed=0;
-		this.friction = 0.05;
+		this.friction = 0.006;
     }
 
     PhysicsBody.EPSILON = 5e-3;
@@ -83,7 +83,7 @@ var PhysicsBody = (function () {
         this.move(this.speed.multiply(ms));
 		this.rotate(this.angularSpeed*ms);
         this.speed.doAdd(this.acceleration.multiply(ms));
-        this.speed.doMultiply(1 - this.friction);
+        this.speed.doMultiply(1 - this.friction*ms);
         this.limitSpeed();
     };
 	
@@ -101,7 +101,6 @@ var PhysicsBody = (function () {
 	
 	PhysicsBody.prototype.applyAcceleration  = function (vector,time){
 		this.speed.doAdd(vector.multiply(time));
-        //this.speed.doMultiply(1 - this.friction);
         this.limitSpeed();
 	};
 	
@@ -235,6 +234,14 @@ var Particle = (function(_super) {
 	__extends(Particle,_super);
 
 	function Particle(center,size,color,life,shrink){
+		this.color = color;
+		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
+		this.life = life || 300;
+		this.gravityFactor = 1;
+		this.shrinkage = (shrink?(size/2)/this.life:0)*shrink;
+	}
+
+	Particle.prototype.fill = function(center,size,color,life,shrink){
 		this.color = color;
 		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
 		this.life = life || 300;
@@ -454,15 +461,15 @@ var World = (function () {
 
 var Effects = (function(){
 	function Explosion(params, timeFactor){
-		var tf = (timeFactor / (1000/60))||1;
+		var tf = (timeFactor / 16.666)||1;
 		var o = this;
-		params = params || {};
-		params.mixin({
+		this.params = params || {};
+		this.params.mixin({
 			count:[15,35],
 			size:[1,4],
 			strength:.3,
 			offset:new Vector2d(0,0),
-			colors:P.slice(0,4),
+			colors: P,
 			center: (o.center = new Vector2d(0,0)),
 			life: [400,800],
 			collisionType: World.NO_COLLISION,
@@ -473,26 +480,22 @@ var Effects = (function(){
 
 		this.zIndex = params.zIndex;
 		this.collisionType = params.collisionType;
-		this.particles = [];
-
 		var count = params.count;
 		if (count instanceof Array) count = randBetween(count[0],count[1]);
 		count = Math.ceil(count * tf);
-		for(var i=0;i<count;i++){
-			var part = new Particle(params.center.copy(),
-				randBetween(params.size),
-				params.colors.random(),
-				randBetween(params.life),
-				params.shrink);
-			part.body.speed = Vector2d.random(params.strength).doAdd(params.offset);
-			part.gravityFactor = randBetween(params.gravityFactor);
-			this.particles.push(part);
-		}
+		this.count = count;
 	}
 
 	Explosion.prototype.fire = function(xy,world){
-		for(var i = 0 ; i < this.particles.length; i++){
-			var part = this.particles[i];
+		var pm = this.params;
+		for(var i = 0 ; i < this.count; i++){
+			var part = new Particle(pm.center.copy(),
+				randBetween(pm.size),
+				pm.colors.random(),
+				randBetween(pm.life),
+				pm.shrink);
+			part.body.speed = Vector2d.random(pm.strength).doAdd(pm.offset);
+			part.gravityFactor = randBetween(pm.gravityFactor);
 			part.body.center.set(xy);
 			world.addEntity(part,this.collisionType,this.zIndex);
 		}
