@@ -73,7 +73,7 @@ Array.prototype.slice.call(document.getElementsByClassName("button")).forEach(fu
             case 6:
             break;
         }
-        return true;
+        return false;
     }
 });
 
