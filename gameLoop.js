@@ -49,7 +49,7 @@ document.body.addEventListener("keyup", function (e) {
     readInputs.keys[e.keyCode] = false;
 });
 Array.prototype.slice.call(document.getElementsByClassName("button")).forEach(function(button){
-    button.onmousedown = button.ontouchstart = function(){
+    button.onmousedown = button.ontouchstart = function(evt){
         switch(+this.id[0]){
             case 0:
                 targetVector = topV;
@@ -73,6 +73,8 @@ Array.prototype.slice.call(document.getElementsByClassName("button")).forEach(fu
             case 6:
             break;
         }
+        evt.preventDefault();
+        evt.handled = true;
         return false;
     }
 });
