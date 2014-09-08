@@ -167,6 +167,7 @@ var Entity = (function () {
 	Entity.prototype.collideAction = noop;
 	Entity.prototype.applyGravity = noop;
 	Entity.prototype.collideGround = noop;
+	Entity.prototype.onRemove = noop;
 	
 	Entity.prototype.animate = function(world,time) {
 		if (!this.isAlive) return;
@@ -181,17 +182,28 @@ var Entity = (function () {
 })();
 
 var EntityKind = {
-	POISONBALL: 13,
-	BUBBLE: 12,
-	PARTICLE : 11,
-	FIREBALL :1,
-	PLAYER : 0,
+	// REUSABLES
+	PARTICLE : 92,
+	BUBBLE: 91,
+	COLLECTIBLE: 90,
+
+	// PROJECTILES
+	FIREBALL : 40,
+	WATERBOLT: 41,
+	POISONBALL: 42,
+	THUNDERBOLT : 43,
+
+	// EMITTERS
+	FIREEMITTER: 50,
+	POISONEMITTER: 51,
+	LIGHTNINGEMITTER: 52,
+	WATEREMITTER: 53,
+
+	// ETC
+	PLAYER : 11,
 	SPRITE : 10,
-	FIREEMITTER: 2,
-	WATEREMITTER:3,
-	WATERBOLT: 4,
-	THUNDERBOLT : 5,
-	EARTHBOMB: 6
+	UNDEFINED : 0
+
 }
 
 var SpriteEntity = (function(_super){
@@ -241,6 +253,8 @@ var Particle = (function(_super) {
 		this.fill.apply(this, arguments);
 	}
 
+	Particle.kind = EntityKind.PARTICLE;
+
 	Particle.prototype.fill = function(center,size,color,life,shrink){
 		this.kind = EntityKind.PARTICLE;
 		this.color = color;
@@ -285,6 +299,8 @@ var Bubble = (function(_super) {
 	function Bubble(center,size,color,life,shrink){
 		this.fill.apply(this, arguments);
 	}
+
+	Bubble.kind = EntityKind.BUBBLE;
 
 	Bubble.prototype.fill = function(center,size,color,life,shrink){
 		this.kind = EntityKind.BUBBLE;
@@ -334,6 +350,41 @@ var Bubble = (function(_super) {
 	};
 
 	return Bubble;
+})(Entity);
+
+var Collectible = (function(_super){
+	__extends(Collectible,_super);
+
+	function Collectible(center,size,color, particleType){
+		this.fill.apply(this, arguments);
+	}
+
+	Collectible.kind = EntityKind.COLLECTIBLE;
+
+	Collectible.prototype.fill = function(center,size,color,particleType, draw){
+		this.kind = EntityKind.COLLECTIBLE;
+		this.color = color;
+		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
+		this.gravityFactor = 0;
+		this.shrinkage = 0;
+		this.life = this._life = 1400;
+		this.triggerDistance = 30;
+		this.draw = draw || particleType.prototype.draw;
+	};
+
+	Collectible.prototype.onAnimate = function(world,time){
+		var player = parrot;
+		var dist = player.body.center.substract(this.body.center).getMagnitude();
+		if (dist < 5){
+			this.collideAction(player);
+			this.markForRemoval();
+		}
+		else if (dist<this.triggerDistance){
+			this.body.gravitateTo(parrot.body.center,time);
+		}
+	};
+
+	return Collectible;
 })(Entity);
 
 var GroundEntity = (function(){
@@ -398,7 +449,10 @@ var World = (function () {
         this.gravity = new Vector2d(0,1e-3);
        	this.roundCount = 0;
 
-       	this.pool = [];
+       	this.pool = {};
+       	this.pool[EntityKind.PARTICLE]=[];
+       	this.pool[EntityKind.BUBBLE] = [];
+       	this.pool[EntityKind.COLLECTIBLE] =[];
 		World.instance = this;
     }
 	
@@ -437,13 +491,16 @@ var World = (function () {
 	World.prototype.clear = function(){
 		this.roundCount=0;
 		var theWorld = this;
+		var pool = theWorld.pool;
 
 		this.containers.forEach(function(egName){
 			var entityGroup = theWorld[egName];
 			if (theWorld.containers.indexOf(egName)<3){
 				theWorld[egName] = entityGroup.filter(function(en){
 					if (en && en.isMarked){
-						if (en.kind == EntityKind.PARTICLE) theWorld.pool.push(en);
+						if (en.kind >= 90){
+							pool[en.kind].push(en);
+						}
 						return false;
 					}
 					return true;
@@ -559,10 +616,10 @@ var Effects = (function(){
 	}
 
 	Explosion.prototype.fire = function(xy,world){
-		var pm = this.params;
+		var pm = this.params, kind = pm.particleType.kind;
 		for(var i = 0 ; i < this.count; i++){
-			if (world.pool.length && pm.particleType==Particle){
-				var part = world.pool.pop();
+			if (kind>=90 && world.pool[kind].length){
+				var part = world.pool[kind].pop();
 				part.isAlive = part.isVisible = !(part.isMarked=false);
 				part.fill(xy.copy(),
 				randBetween(pm.size),

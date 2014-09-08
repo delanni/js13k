@@ -41,6 +41,7 @@ Object.prototype.markForRemoval= function(){
 	this.isVisible = false;
 	this.isAlive = false;
 	this.isMarked = true;
+	if (this.onRemove) this.onRemove();
 	if (this.resources) this.resources.length=0;
 }
 

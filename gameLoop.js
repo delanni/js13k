@@ -10,37 +10,8 @@ var r = (function() {
 /// SETUP INPUTS
 var driveVector= new Vector2d(0,0), topV = new Vector2d(30,24), mid = new Vector2d(30,73), bottom = new Vector2d(30,118);
 var targetVector = mid;
-var readInputs = function(time){
-    driveVector[0]=driveVector[1]=0;
 
-    // up
-    if (readInputs.keys[38]) {
-        driveVector[1]=-0.0005;
-        parrot.body.applyAcceleration(driveVector,time);
-    }
-    // down
-    if (readInputs.keys[40]) {
-        driveVector[1]=0.0005;
-        parrot.body.applyAcceleration(driveVector,time);
-    }
-    // right
-    if (readInputs.keys[39]) {
-        driveVector[0]=0.0005;
-        parrot.body.applyAcceleration(driveVector,time);
-    }
-    // left
-    if (readInputs.keys[37]) {
-        driveVector[0]=-0.0005;
-        parrot.body.applyAcceleration(driveVector,time);
-    }
-
-    if (readInputs.keys[32]){
-        var fb = new Projectiles.Fireball(parrot.body.center, [0.2,0], 3, world);
-        world.addEntity(fb, World.COLLIDE_ALL, World.CENTER);
-        readInputs.keys[32]=false;
-    }
-};
-
+readInputs = function(){};
 readInputs.keys = {};
 document.body.addEventListener("keydown", function (e) {
     readInputs.keys[e.keyCode] = true;
@@ -109,13 +80,8 @@ var onLoaded = function(loader){
     parrot = new SpriteEntity(atlas,new Vector2d(50,50),16,12,[
         [16,12,6,400,[27,0]]
         ]);
-    tree = new SpriteEntity(atlas,new Vector2d(130,144-15-6),9,12,[
-        [9,12,3,800,0]
-        ]);
-    tree2 = new SpriteEntity(atlas,new Vector2d(130,144-15-6),9,12,[
-        [9,12,3,800,0]
-        ]);
-    tree.collideAction = tree2.collideAction = function(other){
+
+    var treeCollideAction = function(other){
         var _thetree = this;
         if (other.kind == EntityKind.FIREBALL){
             if (!this.resources.length || this.resources.every(function(E){return E.kind != EntityKind.FIREEMITTER})){
@@ -123,16 +89,28 @@ var onLoaded = function(loader){
                 fireEmitter.params.size = [4,6];
                 fireEmitter.params.strength*=1.5;
                 _thetree.resources.push(fireEmitter);
-                _thetree.life = 3000;
+                _thetree.life = 1000;
             }
         }
     }
-
-    tree2.body.center[0]-=50;
+    for(var i=0; i < 47; i++){
+        tree = new SpriteEntity(atlas,new Vector2d(130,144-15-6),9,12,[
+            [9,12,3,800,0]
+            ]);
+        tree.collideAction = treeCollideAction;
+        tree.onRemove = function(){
+            var s = new Collectible(this.body.center, 4, T.random(), Bubble);
+            s.body.speed = this.body.speed;
+            s.body.friction = 0;
+            world.addEntity(s,World.NO_COLLISION, World.FOREGROUND);
+        };
+        tree.body.speed[0]=-.05;
+        tree.body.friction = 0;
+        tree.body.center[0]= i * 100;
+        world.addEntity(tree, World.COLLIDE_ALL, World.CENTER);
+    }
 
 	world.addEntity(parrot,World.NO_COLLISION,World.CENTER);
-    world.addEntity(tree, World.COLLIDE_ALL, World.CENTER);
-    world.addEntity(tree2, World.COLLIDE_ALL, World.CENTER);
 }
 var loader = new SpriteSheetLoader(onLoaded);
 loader.addItem(s);
@@ -170,7 +148,7 @@ var gameLoop = function(n) {
         meter.tick();
         return;
     }
-    var time = (n-gameLoop.lastTime)*timefactor;
+    var time = Math.min((n-gameLoop.lastTime),70)*timefactor;
     r(gameLoop);
     readInputs(time);
     animate(time);
