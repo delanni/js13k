@@ -181,6 +181,7 @@ var Entity = (function () {
 })();
 
 var EntityKind = {
+	POISONBALL: 13,
 	BUBBLE: 12,
 	PARTICLE : 11,
 	FIREBALL :1,
@@ -596,13 +597,33 @@ var Emitters = (function(){
 			strength: 0.1,
 			size:8,
 			shrink:1,
-			colors: F
+			colors: F,
+			particleType: Particle
+        };
+        this.exploder = new Effects.Explosion(this.params);
+	}
+	
+	function PoisonEmitter(entity, world){
+		this.kind = EntityKind.POISONEMITTER;
+		this.entity = entity;
+		this.world = world;
+		this.params = {
+            gravityFactor: [-0.2,-0.4],
+            collisionType: World.NO_COLLISION,
+			life:[600,800],
+			count:[0,1],
+			strength: 0.1,
+			size:2,
+			shrink:2,
+			colors: P,
+			particleType: Bubble
         };
         this.exploder = new Effects.Explosion(this.params);
 	}
 
     function WaterEmitter(entity,world){
 		this.entity = entity;
+		this.kind = EntityKind.WATEREMITTER;
 		this.world = world;
 		this.params = {
             gravityFactor: [0.1,0.4],
@@ -618,19 +639,21 @@ var Emitters = (function(){
         this.exploder = new Effects.Explosion(this.params);
     }
 	
-	FireEmitter.prototype.tick = WaterEmitter.prototype.tick = function(world,time){
+	PoisonEmitter.prototype.tick = FireEmitter.prototype.tick = WaterEmitter.prototype.tick = function(world,time){
         this.exploder.fire(this.entity.body.center,this.world);
     };
 
 	return {
 		FireEmitter:FireEmitter,
-		WaterEmitter:WaterEmitter
+		WaterEmitter:WaterEmitter,
+		PoisonEmitter:PoisonEmitter,
 	}
 })();
 
 var Projectiles = (function(_super){
 	__extends(Fireball,_super);
 	__extends(Waterbolt,_super);
+	__extends(Poisonball,_super);
 	
 	function Fireball(center,speed,size,world) {
 		_super.call(this);
@@ -698,8 +721,41 @@ var Projectiles = (function(_super){
 		ctx.restore();
 	};
 
+	function Poisonball(center,speed,size,world) {
+		_super.call(this);
+		this.kind = EntityKind.POISONBALL;
+		this.life = this._life = 1500;
+		this.body = new PhysicsBody(center.copy(), new Vector2d(size,size));
+		this.body.speed.doAdd(speed);
+		this.body.friction = 0;
+		this.color = P[3];
+		this.emitter = new Emitters.PoisonEmitter(this,world);
+
+		this.resources.push(this.emitter);
+	}
+	
+	Poisonball.prototype.collideAction = function(other){
+		if (other.kind == this.kind) return;
+		this.markForRemoval();
+		var exp = new Effects.Explosion({gravityFactor:-.5,colors:P,zIndex:World.FOREGROUND, collisionType: World.NO_COLLISION, shrink:3});
+		exp.fire(this.body.center,world);
+	};
+	
+	Poisonball.prototype.draw = function(ctx, world, time) {		
+		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2],h=ltwh[3];
+		ctx.save();
+		ctx.translate(l+w/2,t+h/2);
+		ctx.rotate(this.body.rotation);
+	    ctx.fillStyle = this.color;
+		ctx.beginPath();
+		ctx.arc(0,0 ,this.body.corner.getMagnitude(), 0, 2 * Math.PI, false);
+		ctx.fill();
+		ctx.restore();
+	};
+	
 	return {
 		Fireball : Fireball,
-		Waterbolt : Waterbolt
+		Waterbolt : Waterbolt,
+		Poisonball: Poisonball
 	}
 })(Entity);
