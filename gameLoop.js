@@ -61,14 +61,16 @@ Array.prototype.slice.call(document.getElementsByClassName("button")).forEach(fu
                 targetVector = bottom;
             break;
             case 3:
-                var fb = new Projectiles.Fireball(parrot.body.center, [0.2,0], 4, world);
-                world.addEntity(fb, World.COLLIDE_ALL, World.CENTER);
+                var proj = new Projectiles.Fireball(parrot.body.center, [0.2,0], 4, world);
+                world.addEntity(proj, World.COLLIDE_ALL, World.CENTER);
             break;
             case 4:
-				var wb = new Projectiles.Waterbolt(parrot.body.center, [0.2,0], 3, world);
-                world.addEntity(wb, World.COLLIDE_ALL, World.CENTER);
+				var proj = new Projectiles.Waterbolt(parrot.body.center, [0.2,0], 3, world);
+                world.addEntity(proj, World.COLLIDE_ALL, World.CENTER);
             break;
             case 5:
+				var proj = new Projectiles.Poisonball(parrot.body.center, [0.2,0], 2, world);
+                world.addEntity(proj, World.COLLIDE_ALL, World.CENTER);
             break;
             case 6:
             break;
