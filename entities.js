@@ -181,6 +181,7 @@ var Entity = (function () {
 })();
 
 var EntityKind = {
+	BUBBLE: 12,
 	PARTICLE : 11,
 	FIREBALL :1,
 	PLAYER : 0,
@@ -277,6 +278,59 @@ var Particle = (function(_super) {
 	return Particle;
 })(Entity);
 
+var Bubble = (function(_super) {
+	__extends(Bubble,_super);
+
+	function Bubble(center,size,color,life,shrink){
+		this.fill.apply(this, arguments);
+	}
+
+	Bubble.prototype.fill = function(center,size,color,life,shrink){
+		this.kind = EntityKind.BUBBLE;
+		this.color = color;
+		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
+		this.life = this._life = life || 300;
+		this.gravityFactor = 1;
+		this.shrinkage = (shrink?(size/2)/this.life:0)*shrink;
+	}
+	
+	Bubble.prototype.draw = function(ctx, world, time) {
+		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2],h=ltwh[3];
+		ctx.save();
+		ctx.translate(l+w/2,t+h/2);
+		ctx.rotate(this.body.rotation);
+	    ctx.strokeStyle = this.color;
+		ctx.beginPath();
+		ctx.arc(0,0 ,this.body.corner.getMagnitude(), 0, 2 * Math.PI, false);
+		ctx.stroke();
+		ctx.restore();
+	};
+	
+	Bubble.prototype.onAnimate = function(world,time) {
+			this.body.corner.doAdd([this.shrinkage*time,this.shrinkage*time]);
+	};
+
+	Bubble.prototype.applyGravity = function(gravityVector,time){
+		this.body.applyAcceleration(gravityVector.multiply(this.gravityFactor),time);
+	};
+
+	Bubble.prototype.collideGround = function (other){
+		this.markForRemoval();
+		new Effects.Explosion({
+			colors:[this.color],
+			shrink:1,
+			count:[5,7],
+			strength:.15,
+			offset: new Vector2d(0,-0.1),
+			center: this.body.center,
+			gravityFactor :1,
+			life:200
+		}).fire(this.body.center,World.instance);
+	};
+
+	return Bubble;
+})(Entity);
+
 var GroundEntity = (function(){
 	function GroundEntity(heightmap, width,height){
 		this.isVisible = true;
@@ -340,6 +394,7 @@ var World = (function () {
        	this.roundCount = 0;
 
        	this.pool = [];
+		World.instance = this;
     }
 	
 	World.prototype.render = function(ctx,time){
@@ -486,7 +541,8 @@ var Effects = (function(){
 			collisionType: World.NO_COLLISION,
 			zIndex: World.BACKGROUND,
 			gravityFactor: 1,
-			shrink:false
+			shrink:false,
+			particleType: Particle
 		});
 
 		this.zIndex = params.zIndex;
@@ -500,7 +556,7 @@ var Effects = (function(){
 	Explosion.prototype.fire = function(xy,world){
 		var pm = this.params;
 		for(var i = 0 ; i < this.count; i++){
-			if (world.pool.length){
+			if (world.pool.length && pm.particleType==Particle){
 				var part = world.pool.pop();
 				part.isAlive = part.isVisible = !(part.isMarked=false);
 				part.fill(xy.copy(),
@@ -509,7 +565,7 @@ var Effects = (function(){
 				randBetween(pm.life),
 				pm.shrink);
 			} else {
-				var part = new Particle(xy.copy(),
+				var part = new pm.particleType(xy.copy(),
 					randBetween(pm.size),
 					pm.colors.random(),
 					randBetween(pm.life),
@@ -557,7 +613,7 @@ var Emitters = (function(){
 			strength: 0.01,
 			size:4,
 			shrink:0.3,
-			colors: W
+			colors: W,
         };
         this.exploder = new Effects.Explosion(this.params);
     }
@@ -630,12 +686,15 @@ var Projectiles = (function(_super){
 		exp.fire(this.body.center,world);
 	};
 	
-	Waterbolt.prototype.draw = function(ctx, world, time) {
-		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2];
+	Waterbolt.prototype.draw = function(ctx, world, time) {		
+		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2],h=ltwh[3];
 		ctx.save();
-		ctx.translate(l+w/2,t+w/2);
-	    ctx.fillStyle = this.color;
-		ctx.fillRect(-w/2,-w/2,w,w);
+		ctx.translate(l+w/2,t+h/2);
+		ctx.rotate(this.body.rotation);
+	    ctx.strokeStyle = this.color;
+		ctx.beginPath();
+		ctx.arc(0,0 ,this.body.corner.getMagnitude(), 0, 2 * Math.PI, false);
+		ctx.stroke();
 		ctx.restore();
 	};
 
