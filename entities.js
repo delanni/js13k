@@ -737,7 +737,7 @@ var Projectiles = (function(_super){
 	Poisonball.prototype.collideAction = function(other){
 		if (other.kind == this.kind) return;
 		this.markForRemoval();
-		var exp = new Effects.Explosion({gravityFactor:-.5,colors:P,zIndex:World.FOREGROUND, collisionType: World.NO_COLLISION, shrink:3});
+		var exp = new Effects.Explosion({gravityFactor:-.3,colors:P,zIndex:World.FOREGROUND, collisionType: World.NO_COLLISION, shrink:2, particleType:Bubble, life:[150,500], strength:0.3, count:[4,10]});
 		exp.fire(this.body.center,world);
 	};
 	
