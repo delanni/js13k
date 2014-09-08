@@ -308,7 +308,11 @@ var Bubble = (function(_super) {
 	};
 	
 	Bubble.prototype.onAnimate = function(world,time) {
+		if(time<this.life){
 			this.body.corner.doAdd([this.shrinkage*time,this.shrinkage*time]);
+		} else {
+			this.collideGround();
+		}
 	};
 
 	Bubble.prototype.applyGravity = function(gravityVector,time){
