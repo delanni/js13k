@@ -160,6 +160,7 @@ var Entity = (function () {
 	Entity.prototype.kind = -1;
 	Entity.prototype.isVisible = true;
 	Entity.prototype.isAlive = true;
+	Entity.prototype.isOnGround = false;
 	Entity.prototype.isMarked=false;
 	Entity.prototype.life = Infinity;
 	Entity.prototype.draw = noop;
@@ -173,13 +174,14 @@ var Entity = (function () {
 		if (this.onAnimate) this.onAnimate(world,time);
 		if (this.resources) this.resources.forEach(function(e){e.tick(world,time);});
 		this.life-=time;
-		if (this.life<0) this.markForRemoval();
+		if (this.life<0 || this.life > this._life) this.markForRemoval();
 	};
 
 	return Entity;
 })();
 
 var EntityKind = {
+	PARTICLE : 11,
 	FIREBALL :1,
 	PLAYER : 0,
 	SPRITE : 10,
@@ -234,17 +236,14 @@ var Particle = (function(_super) {
 	__extends(Particle,_super);
 
 	function Particle(center,size,color,life,shrink){
-		this.color = color;
-		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
-		this.life = life || 300;
-		this.gravityFactor = 1;
-		this.shrinkage = (shrink?(size/2)/this.life:0)*shrink;
+		this.fill.apply(this, arguments);
 	}
 
 	Particle.prototype.fill = function(center,size,color,life,shrink){
+		this.kind = EntityKind.PARTICLE;
 		this.color = color;
 		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
-		this.life = life || 300;
+		this.life = this._life = life || 300;
 		this.gravityFactor = 1;
 		this.shrinkage = (shrink?(size/2)/this.life:0)*shrink;
 	}
@@ -339,6 +338,8 @@ var World = (function () {
         this.player = null;
         this.gravity = new Vector2d(0,1e-3);
        	this.roundCount = 0;
+
+       	this.pool = [];
     }
 	
 	World.prototype.render = function(ctx,time){
@@ -369,9 +370,7 @@ var World = (function () {
 			}
 		});
 
-		if(this.roundCount++>30){
-			this.clear();
-		}
+		if(this.roundCount++>30) this.clear();
 	};
 	
 
@@ -381,10 +380,22 @@ var World = (function () {
 
 		this.containers.forEach(function(egName){
 			var entityGroup = theWorld[egName];
-			for(var i=0;i<entityGroup.length;i++){
-				if (entityGroup[i] && entityGroup[i].isMarked) delete entityGroup[i];
+			if (theWorld.containers.indexOf(egName)<3){
+				theWorld[egName] = entityGroup.filter(function(en){
+					if (en && en.isMarked){
+						if (en.kind == EntityKind.PARTICLE) theWorld.pool.push(en);
+						return false;
+					}
+					return true;
+				});
+			} else {
+				theWorld[egName] = entityGroup.filter(function(en){
+					if (en && en.isMarked){
+						return false;
+					}
+					return true;
+				});
 			}
-			theWorld[egName] = entityGroup.filter(noop);
 		});
 	};
 
@@ -489,14 +500,24 @@ var Effects = (function(){
 	Explosion.prototype.fire = function(xy,world){
 		var pm = this.params;
 		for(var i = 0 ; i < this.count; i++){
-			var part = new Particle(pm.center.copy(),
+			if (world.pool.length){
+				var part = world.pool.pop();
+				part.isAlive = part.isVisible = !(part.isMarked=false);
+				part.fill(xy.copy(),
 				randBetween(pm.size),
 				pm.colors.random(),
 				randBetween(pm.life),
 				pm.shrink);
+			} else {
+				var part = new Particle(xy.copy(),
+					randBetween(pm.size),
+					pm.colors.random(),
+					randBetween(pm.life),
+					pm.shrink);
+			}
+			part.isOnGround = false;
 			part.body.speed = Vector2d.random(pm.strength).doAdd(pm.offset);
 			part.gravityFactor = randBetween(pm.gravityFactor);
-			part.body.center.set(xy);
 			world.addEntity(part,this.collisionType,this.zIndex);
 		}
 	};
@@ -521,6 +542,7 @@ var Emitters = (function(){
 			shrink:1,
 			colors: F
         };
+        this.exploder = new Effects.Explosion(this.params);
 	}
 
     function WaterEmitter(entity,world){
@@ -537,11 +559,11 @@ var Emitters = (function(){
 			shrink:0.3,
 			colors: W
         };
+        this.exploder = new Effects.Explosion(this.params);
     }
 	
 	FireEmitter.prototype.tick = WaterEmitter.prototype.tick = function(world,time){
-        var exp = new Effects.Explosion(this.params);
-        exp.fire(this.entity.body.center,this.world);
+        this.exploder.fire(this.entity.body.center,this.world);
     };
 
 	return {
@@ -557,7 +579,7 @@ var Projectiles = (function(_super){
 	function Fireball(center,speed,size,world) {
 		_super.call(this);
 		this.kind = EntityKind.FIREBALL;
-		this.life = 1500;
+		this.life = this._life = 1500;
 		this.body = new PhysicsBody(center.copy(), new Vector2d(size,size));
 		this.body.speed.doAdd(speed);
 		this.body.friction = 0;
@@ -590,7 +612,7 @@ var Projectiles = (function(_super){
 	function Waterbolt(center,speed,size,world){
 		_super.call(this);
 		this.kind = EntityKind.WATERBOLT;
-		this.life = 1500;
+		this.life =this._life = 1500;
 		this.body = new PhysicsBody(center.copy(), new Vector2d(size,size));
 		this.body.speed.doAdd(speed);
 		this.body.friction = 0;

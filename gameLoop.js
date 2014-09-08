@@ -84,7 +84,7 @@ maxiCanvas.addEventListener("mousedown",function(e){
         collisionType:Effects.Explosion.COLLIDE_GROUND
     });
 
-    exp.fire(e.offsetX/zoom,e.offsetY/zoom,world);
+    exp.fire([e.offsetX/zoom,e.offsetY/zoom],world);
 });
 
 /// SETUP ENTITIES

@@ -57,7 +57,7 @@ var Animation = (function(){
 	Animation.prototype.drawFrame = function(ctx,forTime,x,y,scalex,scaley){
 		if(!this.isReady) this.init();
 		var t=  (this.remainder+forTime);
-		var frameStep = Math.floor(t / this.frameLength);
+		var frameStep = (t / this.frameLength)|0;
 		this.remainder = t%this.frameLength;
 		var frame = this.skip(frameStep);
 		frame.drawItself(ctx,x,y,scalex,scaley);
@@ -65,6 +65,7 @@ var Animation = (function(){
 	
 	Animation.prototype.skip = function(frames){
 		this.currentFrame = (this.currentFrame+frames)%this.length;
+		if (this.currentFrame<0) this.currentFrame = this.length+this.currentFrame;
 		return this.frames[this.currentFrame];
 	};
 	
