@@ -73,6 +73,8 @@ Array.prototype.slice.call(document.getElementsByClassName("button")).forEach(fu
                 world.addEntity(proj, World.COLLIDE_ALL, World.CENTER);
             break;
             case 6:
+                var proj = new Projectiles.Lightningbolt(parrot.body.center, [0.2,0], 2, world);
+                world.addEntity(proj, World.COLLIDE_ALL, World.CENTER);
             break;
         }
         evt.preventDefault();
