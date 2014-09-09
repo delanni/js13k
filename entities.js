@@ -144,7 +144,7 @@ var PhysicsBody = (function () {
 	};
 
 	PhysicsBody.prototype.gravitateTo = function (location,time){
-		time = Math.min(time,77);
+		time = Math.max(Math.min(time,77),16);
 		this.speed = (location.substract(this.center).multiply(time/3000));
 	};
 
@@ -716,7 +716,7 @@ var Emitters = (function(){
         });
         this.exploder = new Effects.Explosion({
             gravityFactor: [-.1,.1],
-            collisionType: World.NO_COLLISION,
+            collisionType: World.COLLIDE_GROUND,
 			life:[400,700],
 			count:[0,1],
 			strength: 0.1,
@@ -863,7 +863,7 @@ var Projectiles = (function(_super){
 	Lightningbolt.prototype.collideAction = function(other){
 		if (other.kind == this.kind) return;
 		this.markForRemoval();
-		var exp = new Effects.Explosion({size:1, gravityFactor:[-.3,.3],colors:T,zIndex:World.FOREGROUND, collisionType: World.NO_COLLISION, shrink:0, life:[150,500], strength:0.3, count:[4,10]});
+		var exp = new Effects.Explosion({size:1, gravityFactor:[-.3,.3],colors:T,zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:0, life:[150,500], strength:0.3, count:[4,10]});
 		exp.fire(this.body.center,world);
 	};
 
