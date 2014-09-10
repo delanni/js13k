@@ -56,9 +56,6 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 
-enable = function(btn){
-	btn.classList.remove("disabled");
-}
-disable = function(btn){
-	btn.classList.add("disabled");
+able = function(btns,en){
+	for(var i=0;i<btns.length;i++) if (en) btns[i].classList.remove("disabled"); else btns[i].classList.add("disabled");
 }
