@@ -262,6 +262,7 @@ var Particle = (function(_super) {
 		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
 		this.life = this._life = life || 300;
 		this.gravityFactor = 1;
+		this.restitution = .3;
 		this.shrinkage = (shrink?(size/2)/this.life:0)*shrink;
 	}
 	
@@ -284,9 +285,9 @@ var Particle = (function(_super) {
 	};
 
 	Particle.prototype.collideGround = function (other){
-		this.body.speed[1]*=-other.restitution;
-		this.body.speed[0]*=other.restitution;
-		this.body.angularSpeed*=-other.restitution;
+		this.body.speed[1]*=-this.restitution;
+		this.body.speed[0]*=this.restitution;
+		this.body.angularSpeed*=-this.restitution;
 		this.body.limitSpeed();
 		if (this.body.speed.getMagnitude()==0) {this.isOnGround = true; this.body.angularSpeed=0;}
 	};
@@ -337,7 +338,7 @@ var Bubble = (function(_super) {
 
 	Bubble.prototype.collideGround = function (other){
 		this.markForRemoval();
-		new Effects.Explosion({
+		new Explosion({
 			colors:[this.color],
 			shrink:1,
 			count:[5,7],
@@ -403,7 +404,6 @@ var GroundEntity = (function(){
 		this.isCollisionAware = true;
 		this.groundheight = groundheight;
 		this.color = P[2];
-		this.restitution = 0.3;
 		this.width = width || 160;
 		this.height = height || 144;
 	}
@@ -431,7 +431,7 @@ var GroundEntity = (function(){
 	GroundEntity.prototype.collidesWith = function(body){
 		var ltwh = body.getLTWH();
 		//var max = this.heightmap.maxInRange(clamp(ltwh[0],0,this.width), clamp(ltwh[0]+ltwh[2],0,this.width));
-		var max = this.heightmap;
+		var max = this.groundheight;
 		if (max+ltwh[1]+ltwh[3]>this.height) return true;
 		return false;
 	};
@@ -594,7 +594,7 @@ var World = (function () {
     return World;
 })();
 
-var Effects = (function(){
+var Explosion = (function(){
 	function Explosion(params, timeFactor){
 		var tf = (timeFactor / 16.666)||1;
 		var o = this;
@@ -624,6 +624,7 @@ var Effects = (function(){
 
 	Explosion.prototype.fire = function(xy,world){
 		var pm = this.params, kind = pm.particleType.kind;
+		var particles = [];
 		for(var i = 0 ; i < this.count; i++){
 			if (kind>=90 && world.pool[kind].length){
 				var part = world.pool[kind].pop();
@@ -640,16 +641,16 @@ var Effects = (function(){
 					randBetween(pm.life),
 					pm.shrink);
 			}
+			particles.push(part);
 			part.isOnGround = false;
 			part.body.speed = Vector2d.random(pm.strength).doAdd(pm.offset);
 			part.gravityFactor = randBetween(pm.gravityFactor);
 			world.addEntity(part,this.collisionType,this.zIndex);
 		}
+		return particles;
 	};
 
-	return {
-		Explosion: Explosion
-	};
+	return Explosion;
 })();
 
 var Emitters = (function(){
@@ -668,7 +669,7 @@ var Emitters = (function(){
 			colors: F,
 			particleType: Particle
         };
-        this.exploder = new Effects.Explosion(this.params);
+        this.exploder = new Explosion(this.params);
 	}
 	
 	function PoisonEmitter(entity, world){
@@ -686,7 +687,7 @@ var Emitters = (function(){
 			colors: P,
 			particleType: Bubble
         };
-        this.exploder = new Effects.Explosion(this.params);
+        this.exploder = new Explosion(this.params);
 	}
 
     function WaterEmitter(entity,world){
@@ -704,14 +705,14 @@ var Emitters = (function(){
 			shrink:0.3,
 			colors: W
         };
-        this.exploder = new Effects.Explosion(this.params);
+        this.exploder = new Explosion(this.params);
     }
 
     function LightningEmitter(entity,world){
 		this.entity = entity;
 		this.kind = EntityKind.LIGHTNINGEMITTER;
 		this.world = world;
-        this.tracer = new Effects.Explosion({
+        this.tracer = new Explosion({
             gravityFactor: 0,
             collisionType: World.NO_COLLISION,
 			life:[200,500],
@@ -721,7 +722,7 @@ var Emitters = (function(){
 			shrink:0,
 			colors: T
         });
-        this.exploder = new Effects.Explosion({
+        this.exploder = new Explosion({
             gravityFactor: [-.1,.1],
             collisionType: World.COLLIDE_GROUND,
 			life:[400,700],
@@ -788,7 +789,7 @@ var Projectiles = (function(_super){
 	Fireball.prototype.collideAction = function(other){
 		if (other.kind == this.kind) return;
 		this.markForRemoval();
-		var exp = new Effects.Explosion({gravityFactor:.7,colors:F,offset:this.body.speed.multiply(.5),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.6});
+		var exp = new Explosion({gravityFactor:.7,colors:F,offset:this.body.speed.multiply(.5),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.6});
 		exp.fire(this.body.center,world);
 	};
 	
@@ -806,7 +807,7 @@ var Projectiles = (function(_super){
 	Waterbolt.prototype.collideAction = function(other){
 		if (other.kind == this.kind) return;
 		this.markForRemoval();
-		var exp = new Effects.Explosion({gravityFactor:.8,colors:W,offset:this.body.speed.multiply(.25),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.8});
+		var exp = new Explosion({gravityFactor:.8,colors:W,offset:this.body.speed.multiply(.25),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.8});
 		exp.fire(this.body.center,world);
 	};
 	
@@ -832,7 +833,7 @@ var Projectiles = (function(_super){
 	Poisonball.prototype.collideAction = function(other){
 		if (other.kind == this.kind) return;
 		this.markForRemoval();
-		var exp = new Effects.Explosion({gravityFactor:-.3,colors:P,zIndex:World.FOREGROUND, collisionType: World.NO_COLLISION, shrink:2, particleType:Bubble, life:[150,500], strength:0.3, count:[4,10]});
+		var exp = new Explosion({gravityFactor:-.3,colors:P,zIndex:World.FOREGROUND, collisionType: World.NO_COLLISION, shrink:2, particleType:Bubble, life:[150,500], strength:0.3, count:[4,10]});
 		exp.fire(this.body.center,world);
 	};
 	
@@ -860,7 +861,7 @@ var Projectiles = (function(_super){
 	Lightningbolt.prototype.collideAction = function(other){
 		if (other.kind == this.kind) return;
 		this.markForRemoval();
-		var exp = new Effects.Explosion({size:1, gravityFactor:[-.3,.3],colors:T,zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:0, life:[150,500], strength:0.3, count:[4,10]});
+		var exp = new Explosion({size:1, gravityFactor:[-.3,.3],colors:T,zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:0, life:[150,500], strength:0.3, count:[4,10]});
 		exp.fire(this.body.center,world);
 	};
 
