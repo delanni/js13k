@@ -73,6 +73,37 @@ var onLoaded = function(loader){
     parrot = new SpriteEntity(atlas,new Vector2d(0,0),16,12,[
         [16,12,6,400,[27,0]]
         ]);
+		
+	parrot.onRemove = function(){	
+		var chunks = new Explosion({
+			colors: B,
+			size: [1,5],
+			count: [10,20],
+			strength: .5,
+			offset: this.body.speed.multiply(2),
+			center: this.body.center,
+			collisionType: World.COLLIDE_GROUND,
+			zIndex: World.FOREGROUND
+		}).fire(this.body.center, world);
+		chunks = chunks.filter(function(EL){return EL.body.corner[0]>1.5});
+		for(var i =0; i< chunks.length; i++){
+			var chunk  = chunks[i];
+			chunk.restitution = .9;
+			chunk.tracer = new Explosion({
+            gravityFactor: 0,
+            collisionType: World.NO_COLLISION,
+			life:[200,500],
+			count:[0,2],
+			strength: 0.01,
+			size:1,
+			shrink:0,
+			colors: B.slice(2)
+			});
+			chunk.onAnimate = function(){
+				this.tracer.fire(this.body.center,world);
+			}
+		}
+	}
 
     var treeCollideAction = function(other){
         var _thetree = this;
