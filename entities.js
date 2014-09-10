@@ -197,13 +197,13 @@ var EntityKind = {
 	FIREBALL : 40,
 	WATERBOLT: 41,
 	POISONBALL: 42,
-	THUNDERBOLT : 43,
+	LIGHTNINGBOLT : 43,
 
 	// EMITTERS
 	FIREEMITTER: 50,
 	WATEREMITTER: 51,
 	POISONEMITTER: 52,
-	THUNDEREMITTER: 53,
+	LIGHTNINGBOLT: 53,
 
 	// ETC
 	PLAYER : 11,
@@ -774,7 +774,7 @@ var Projectiles = (function(_super){
 		_proj.call(this, center, [0.2,0], 3, F.random());
 		this.kind = EntityKind.FIREBALL;
 		this.emitter = new Emitters.FireEmitter(this,world);
-		this.emitter.params.gravityFactor = [-0.1,0.1];
+		this.emitter.params.gravityFactor = [-0.2,0.1];
 		this.emitter.params.strength = 0.05;
 		this.emitter.params.count = [0,1];
 
