@@ -55,3 +55,10 @@ var __extends = this.__extends || function (d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 };
+
+enable = function(btn){
+	btn.classList.remove("disabled");
+}
+disable = function(btn){
+	btn.classList.add("disabled");
+}
