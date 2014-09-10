@@ -144,8 +144,8 @@ var PhysicsBody = (function () {
 	};
 
 	PhysicsBody.prototype.gravitateTo = function (location,time){
-		time = Math.max(Math.min(time,77),16);
-		this.speed = (location.substract(this.center).multiply(time/3000));
+		time = Math.max(time,16);
+		this.speed = (location.substract(this.center).multiply(time/2000));
 	};
 
     return PhysicsBody;
@@ -256,6 +256,7 @@ var Particle = (function(_super) {
 	Particle.kind = EntityKind.PARTICLE;
 
 	Particle.prototype.fill = function(center,size,color,life,shrink){
+		_super.call(this);
 		this.kind = EntityKind.PARTICLE;
 		this.color = color;
 		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
@@ -267,10 +268,10 @@ var Particle = (function(_super) {
 	Particle.prototype.draw = function(ctx, world, time) {
 		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2],h=ltwh[3];
 		ctx.save();
-		ctx.translate(l+w/2,t+h/2);
+		ctx.tr(l+w/2,t+h/2);
 		ctx.rotate(this.body.rotation);
 	    ctx.fillStyle = this.color;
-		ctx.fillRect(-w/2,-h/2,w,h);
+		ctx.fr(-w/2,-h/2,w,h);
 		ctx.restore();
 	};
 	
@@ -314,8 +315,7 @@ var Bubble = (function(_super) {
 	Bubble.prototype.draw = function(ctx, world, time) {
 		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2],h=ltwh[3];
 		ctx.save();
-		ctx.translate(l+w/2,t+h/2);
-		ctx.rotate(this.body.rotation);
+		ctx.tr(l+w/2,t+h/2);
 	    ctx.strokeStyle = this.color;
 		ctx.beginPath();
 		ctx.arc(0,0 ,this.body.corner.getMagnitude(), 0, 2 * Math.PI, false);
@@ -368,14 +368,14 @@ var Collectible = (function(_super){
 		this.gravityFactor = 0;
 		this.shrinkage = 0;
 		this.life = this._life = 1400;
-		this.triggerDistance = 30;
+		this.triggerDistance = 50;
 		this.draw = draw || particleType.prototype.draw;
 	};
 
 	Collectible.prototype.onAnimate = function(world,time){
 		var player = parrot;
 		var dist = player.body.center.substract(this.body.center).getMagnitude();
-		if (dist < 5){
+		if (dist < 8){
 			this.collideAction(player);
 			this.markForRemoval();
 		}
@@ -387,21 +387,28 @@ var Collectible = (function(_super){
 	return Collectible;
 })(Entity);
 
+var Target = (function(_super){
+	__extends(Target,_super);
+
+	function Target(center,size,color){
+		 _super.call(this,arguments);
+	}
+
+	return Target;
+})(SpriteEntity);
+
 var GroundEntity = (function(){
-	function GroundEntity(heightmap, width,height){
+	function GroundEntity(groundheight,width,height){
 		this.isVisible = true;
 		this.isCollisionAware = true;
-		this.heightmap = heightmap;
+		this.groundheight = groundheight;
 		this.color = P[2];
 		this.restitution = 0.3;
 		this.width = width || 160;
 		this.height = height || 144;
 	}
 	
-	GroundEntity.prototype.draw = function(ctx, world) {
-		this.width = ctx.canvas.width;
-		this.height = ctx.canvas.height;
-		
+	GroundEntity.prototype.draw = function(ctx, world) {		
 		ctx.save();
 	    ctx.fillStyle = this.color;
 		ctx.beginPath();
@@ -411,8 +418,8 @@ var GroundEntity = (function(){
 			ctx.lineTo(i,this.height-heightmap[i]);
 		}
 		*/
-		ctx.lineTo(0,this.height-heightmap);
-		ctx.lineTo(this.width,this.height-heightmap);
+		ctx.lineTo(0,this.height-this.groundheight);
+		ctx.lineTo(this.width,this.height-this.groundheight);
 		ctx.lineTo(this.width+1,this.height);
 		ctx.closePath();
 		ctx.fill();
@@ -695,7 +702,7 @@ var Emitters = (function(){
 			strength: 0.01,
 			size:4,
 			shrink:0.3,
-			colors: W,
+			colors: W
         };
         this.exploder = new Effects.Explosion(this.params);
     }
@@ -712,7 +719,7 @@ var Emitters = (function(){
 			strength: 0.01,
 			size:1,
 			shrink:0,
-			colors: T,
+			colors: T
         });
         this.exploder = new Effects.Explosion({
             gravityFactor: [-.1,.1],
@@ -722,7 +729,7 @@ var Emitters = (function(){
 			strength: 0.1,
 			size:[1,2],
 			shrink:0,
-			colors: T,
+			colors: T
         });
     }
 
@@ -749,16 +756,19 @@ var Projectiles = (function(_super){
 	__extends(Poisonball,_super);
 	__extends(Lightningbolt,_super);
 	
-	function Fireball(center,speed,size,world) {
-		_super.call(this);
-		this.kind = EntityKind.FIREBALL;
+	function _proj(center,speed,size,color){
 		this.life = this._life = 1500;
-		this.body = new PhysicsBody(center.copy(), new Vector2d(size,size));
+		this.body = new PhysicsBody(center.copy(),new Vector2d(size,size));
 		this.body.speed.doAdd(speed);
 		this.body.friction = 0;
-		this.color = F.random();
+		this.color = color;
+	}
+	
+	function Fireball(center,world) {
+		_super.call(this);
+		_proj.call(this, center, [0.2,0], 3, F.random());
+		this.kind = EntityKind.FIREBALL;
 		this.emitter = new Emitters.FireEmitter(this,world);
-		//this.emitter.params.gravityFactor = [-0.4,0.1];
 		this.emitter.params.gravityFactor = [-0.1,0.1];
 		this.emitter.params.strength = 0.05;
 		this.emitter.params.count = [0,1];
@@ -769,9 +779,9 @@ var Projectiles = (function(_super){
 	Fireball.prototype.draw = function(ctx, world, time) {
 		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2];
 		ctx.save();
-		ctx.translate(l+w/2,t+w/2);
+		ctx.tr(l+w/2,t+w/2);
 	    ctx.fillStyle = this.color;
-		ctx.fillRect(-w/2,-w/2,w,w);
+		ctx.fr(-w/2,-w/2,w,w);
 		ctx.restore();
 	};
 
@@ -782,14 +792,11 @@ var Projectiles = (function(_super){
 		exp.fire(this.body.center,world);
 	};
 	
-	function Waterbolt(center,speed,size,world){
+	function Waterbolt(center, world){
 		_super.call(this);
+		_proj.call(this, center, [0.2,0], 3, W.random());
 		this.kind = EntityKind.WATERBOLT;
-		this.life =this._life = 1500;
-		this.body = new PhysicsBody(center.copy(), new Vector2d(size,size));
-		this.body.speed.doAdd(speed);
-		this.body.friction = 0;
-		this.color = W.random();
+		
 		this.emitter = new Emitters.WaterEmitter(this,world);
 		this.emitter.params.count = [-1,1];
 
@@ -806,7 +813,7 @@ var Projectiles = (function(_super){
 	Waterbolt.prototype.draw = function(ctx, world, time) {		
 		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2],h=ltwh[3];
 		ctx.save();
-		ctx.translate(l+w/2,t+h/2);
+		ctx.tr(l+w/2,t+h/2);
 		ctx.rotate(this.body.rotation);
 	    ctx.strokeStyle = this.color;
 		ctx.beginPath();
@@ -815,16 +822,10 @@ var Projectiles = (function(_super){
 		ctx.restore();
 	};
 
-	function Poisonball(center,speed,size,world) {
+	function Poisonball(center,world) {
 		_super.call(this);
-		this.kind = EntityKind.POISONBALL;
-		this.life = this._life = 1500;
-		this.body = new PhysicsBody(center.copy(), new Vector2d(size,size));
-		this.body.speed.doAdd(speed);
-		this.body.friction = 0;
-		this.color = P[3];
+		_proj.call(this, center, [0.2,0], 2, P[3]);
 		this.emitter = new Emitters.PoisonEmitter(this,world);
-
 		this.resources.push(this.emitter);
 	}
 	
@@ -838,7 +839,7 @@ var Projectiles = (function(_super){
 	Poisonball.prototype.draw = function(ctx, world, time) {		
 		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2],h=ltwh[3];
 		ctx.save();
-		ctx.translate(l+w/2,t+h/2);
+		ctx.tr(l+w/2,t+h/2);
 		ctx.rotate(this.body.rotation);
 	    ctx.fillStyle = this.color;
 		ctx.beginPath();
@@ -847,16 +848,12 @@ var Projectiles = (function(_super){
 		ctx.restore();
 	};
 
-	function Lightningbolt(center,speed,size,world) {
+	function Lightningbolt(center, world) {
 		_super.call(this);
+		_proj.call(this,center,[.2,0],2,T.random());
 		this.kind = EntityKind.LIGHTNINGBOLT;
-		this.life = this._life = 1500;
-		this.body = new PhysicsBody(center.copy(), new Vector2d(size,size));
-		this.body.speed.doAdd(speed);
-		this.body.friction = 0;
-		this.color = T.random();
+		
 		this.emitter = new Emitters.LightningEmitter(this,world);
-
 		this.resources.push(this.emitter);
 	}
 	
@@ -874,9 +871,9 @@ var Projectiles = (function(_super){
 	Lightningbolt.prototype.draw = function(ctx, world, time) {		
 		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2];
 		ctx.save();
-		ctx.translate(l+w/2,t+w/2);
+		ctx.tr(l+w/2,t+w/2);
 	    ctx.fillStyle = this.color;
-		ctx.fillRect(-w/2,-w/2,w,w);
+		ctx.fr(-w/2,-w/2,w,w);
 		ctx.restore();
 	};
 	
