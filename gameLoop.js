@@ -1,4 +1,3 @@
-
 var r = (function() {
     return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(callback) {
         window.setTimeout(callback, 1000 / 60,  1000 / 60);
@@ -7,9 +6,8 @@ var r = (function() {
 
 (screen.msLockOrientation&& screen.msLockOrientation("landscape-primary"))||(screen.mozLockOrientation&& screen.mozLockOrientation("landscape-primary"));
 
-/// SETUP INPUTS
+/// SETUP ONCE
 var driveVector= new Vector2d(0,0), topV = new Vector2d(30,24), mid = new Vector2d(30,73), bottom = new Vector2d(30,118);
-var targetVector = mid;
 
 readInputs = function(){};
 readInputs.keys = {};
@@ -20,7 +18,6 @@ document.body.addEventListener("keyup", function (e) {
     readInputs.keys[e.keyCode] = false;
 });
 
-miniCanvas.onclick = function(){crisp = !crisp}
 
 var shoot = function(kind){
 	world.addEntity(new kind(parrot.body.center,world), World.COLLIDE_ALL, World.CENTER);
@@ -39,15 +36,17 @@ CMD = [
 	// lightning
 	Function("shoot(Projectiles.Lightningbolt)"),
 	// slowmo
-	Function("btn","disable(btn);setTimeout(function(){CMD[7](btn)},10e3);timefactor=.25"),
+	Function("btn","able([btn],false);setTimeout(function(){CMD[7](btn)},10e3);timefactor=.25"),
 	// normalmo
-	Function("btn","timefactor=1;setTimeout(function(){enable(btn)},10e3)")
+	Function("btn","timefactor=1;setTimeout(function(){able([btn],true)},10e3)")
 ],
 command = function(id,caller){
 	if (!caller.classList.contains("disabled"))
 	CMD[id](caller);
 }
-Array.prototype.slice.call(document.getElementsByClassName("button")).forEach(function(button){
+
+var allButtons = Array.prototype.slice.call(document.getElementsByClassName("button"));
+allButtons.forEach(function(button){
     button.onmousedown = button.ontouchstart = function(evt){
         command(+this.id[0],this);
         evt.preventDefault();
@@ -55,25 +54,27 @@ Array.prototype.slice.call(document.getElementsByClassName("button")).forEach(fu
         return false;
     }
 });
+var ableAll = function(en){able(allButtons,en)};
 
-/// SETUP ENTITIES
-var world = new World();
+/// SETUP EVERYTIME
 
-var ground = new GroundEntity(15,3000);
-world.groundElements.push(ground);
-
-var anim;
 var s = new SpriteSheet("img/atlas.png","atlas");
-var parrot;
+var parrot, world, atlas, ground,targetVector;
 var tree;
-var onLoaded = function(loader){
-	var atlas = loader.spriteSheets["atlas"];
-    // SpriteEntity(spritesheet,center,w,h,animations)
-    // getAnimation = function(tileWidth,tileHeight, frames, time, start, animwidth?)
-    parrot = new SpriteEntity(atlas,new Vector2d(0,0),16,12,[
+var loadGameEntities = function(loader){
+
+	atlas = loader.spriteSheets["atlas"];
+	world = new World();
+	ground = new GroundEntity(15,3000);
+	world.groundElements.push(ground);
+    parrot = new SpriteEntity(atlas,new Vector2d(0,73),16,12,[
         [16,12,6,400,[27,0]]
         ]);
-		
+	parrot.collideAction = function(other){
+		if (other.kind<10){
+			this.markForRemoval();
+		}
+	}
 	parrot.onRemove = function(){	
 		var chunks = new Explosion({
 			colors: B,
@@ -103,7 +104,16 @@ var onLoaded = function(loader){
 				this.tracer.fire(this.body.center,world);
 			}
 		}
+		var checkDead = function(){
+			setTimeout(function(){
+				if(chunks.every(function(e){return !e.isAlive;})) gameOver();
+				else checkDead();
+			},100);
+		}
+		checkDead();
 	}
+	
+	targetVector=mid;
 
     var treeCollideAction = function(other){
         var _thetree = this;
@@ -113,48 +123,65 @@ var onLoaded = function(loader){
                 fireEmitter.params.size = [4,6];
                 fireEmitter.params.strength*=1.5;
                 _thetree.resources.push(fireEmitter);
-                _thetree.life = 1000;
+                _thetree.life = 750;
             }
         }
     }
-    for(var i=0; i < 47; i++){
-        tree = new SpriteEntity(atlas,new Vector2d(130,144-15-6),9,12,[
+	
+	// populate trees
+    for(var i=0; i < 30; i++){
+        tree = new SpriteEntity(atlas,new Vector2d(130,123),9,12,[
             [9,12,3,800,0]
             ]);
         tree.collideAction = treeCollideAction;
+		tree.kind = EntityKind.FIRETARGET;
         tree.onRemove = function(){
+		/*
             var s = new Collectible(this.body.center, 4, T.random(), Bubble);
             s.body.speed = this.body.speed;
             s.body.friction = 0;
-            world.addEntity(s,World.NO_COLLISION, World.FOREGROUND);
+            world.addEntity(s,World.NO_COLLISION, World.FOREGROUND);*/
         };
-        tree.body.speed[0]=0;
-        tree.body.friction = 0;
-        tree.body.center[0]= i * 100;
+        tree.body.center[0]= randBetween(50,3000,true);
         world.addEntity(tree, World.COLLIDE_ALL, World.CENTER);
     }
-
-	world.addEntity(parrot,World.NO_COLLISION,World.CENTER);
+	
+	// populate enemigos
+	//for(var i = 0; i<
+	
+	world.addEntity(parrot,World.COLLIDE_ALL, World.CENTER);
+	startGame();
 }
-var loader = new SpriteSheetLoader(onLoaded);
+
+var loader = new SpriteSheetLoader(loadGameEntities);
 loader.addItem(s);
 loader.start(10);
 
-// SETUP LOOP+FUNCTIONS
-var animate = function(time) {
-    // animate animatables
-	parrot.body.speed[1] = (targetVector[1]-parrot.body.center[1])*Math.max(time,16)/3000;
-    //parrot.body.gravitateTo(targetVector,time);
-	parrot.body.speed[0]= 0.05;
-    world.animate(time);
-	parrot.body.center[1] = clamp(parrot.body.center[1],topV[1],bottom[1]);
+var gameOver = function(){
+	animate = noop;
+	loadGameEntities(loader);
+	startGame();
 };
+var startGame = function(){
+	ableAll(true);
+	timefactor = 1;
+	animate = function(time) {
+	parrot.body.speed[1] = (targetVector[1]-parrot.body.center[1])*Math.max(time,16)/3000;
+	parrot.body.speed[0]= 0.05;
+	world.animate(time);
+	parrot.body.center[1] = clamp(parrot.body.center[1],topV[1],bottom[1]);
+	};
+};
+
+// SETUP LOOP+FUNCTIONS
+var animate = noop;
 
 var ctx = miniCanvas.getContext("2d");
 ctx.webkitImageSmoothingEnabled = false;
 ctx.imageSmoothingEnabled = false;
 translation = 0;
 var render = function(time) {
+	if (parrot && world){
 	translation = -parrot.body.center[0]+30;
 	ctx.save();
 	ctx.tr(translation,0);
@@ -166,6 +193,7 @@ var render = function(time) {
 	world.render(ctx,time);
     //maxiCanvas.copyFrom(miniCanvas);
 	ctx.restore();
+	}
 };
 
 var timefactor = 1;
