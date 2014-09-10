@@ -182,6 +182,12 @@ var Entity = (function () {
 })();
 
 var EntityKind = {
+	// TARGETS
+	FIRETARGET:0,
+	WATERTARGET:1,
+	POISONTARGET:2,
+	LIGHTNINGTARGET:3,
+
 	// REUSABLES
 	PARTICLE : 92,
 	BUBBLE: 91,
@@ -195,15 +201,13 @@ var EntityKind = {
 
 	// EMITTERS
 	FIREEMITTER: 50,
-	POISONEMITTER: 51,
-	LIGHTNINGEMITTER: 52,
-	WATEREMITTER: 53,
+	WATEREMITTER: 51,
+	POISONEMITTER: 52,
+	THUNDEREMITTER: 53,
 
 	// ETC
 	PLAYER : 11,
-	SPRITE : 10,
-	UNDEFINED : 0
-
+	SPRITE : 10
 }
 
 var SpriteEntity = (function(_super){
@@ -787,10 +791,11 @@ var Projectiles = (function(_super){
 	};
 
 	Fireball.prototype.collideAction = function(other){
-		if (other.kind == this.kind) return;
-		this.markForRemoval();
-		var exp = new Explosion({gravityFactor:.7,colors:F,offset:this.body.speed.multiply(.5),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.6});
-		exp.fire(this.body.center,world);
+		if (other.kind < 10){
+			this.markForRemoval();
+			var exp = new Explosion({gravityFactor:.7,colors:F,offset:this.body.speed.multiply(.5),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.6});
+			exp.fire(this.body.center,world);
+		}
 	};
 	
 	function Waterbolt(center, world){
@@ -805,10 +810,11 @@ var Projectiles = (function(_super){
 	}
 	
 	Waterbolt.prototype.collideAction = function(other){
-		if (other.kind == this.kind) return;
-		this.markForRemoval();
-		var exp = new Explosion({gravityFactor:.8,colors:W,offset:this.body.speed.multiply(.25),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.8});
-		exp.fire(this.body.center,world);
+		if (other.kind< 10) {
+			this.markForRemoval();
+			var exp = new Explosion({gravityFactor:.8,colors:W,offset:this.body.speed.multiply(.25),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.8});
+			exp.fire(this.body.center,world);
+		}
 	};
 	
 	Waterbolt.prototype.draw = function(ctx, world, time) {		
@@ -826,15 +832,17 @@ var Projectiles = (function(_super){
 	function Poisonball(center,world) {
 		_super.call(this);
 		_proj.call(this, center, [0.2,0], 2, P[3]);
+		this.kind = EntityKind.POISONBALL;
 		this.emitter = new Emitters.PoisonEmitter(this,world);
 		this.resources.push(this.emitter);
 	}
 	
 	Poisonball.prototype.collideAction = function(other){
-		if (other.kind == this.kind) return;
-		this.markForRemoval();
-		var exp = new Explosion({gravityFactor:-.3,colors:P,zIndex:World.FOREGROUND, collisionType: World.NO_COLLISION, shrink:2, particleType:Bubble, life:[150,500], strength:0.3, count:[4,10]});
-		exp.fire(this.body.center,world);
+		if (other.kind < 10) { 
+			this.markForRemoval();
+			var exp = new Explosion({gravityFactor:-.3,colors:P,zIndex:World.FOREGROUND, collisionType: World.NO_COLLISION, shrink:2, particleType:Bubble, life:[150,500], strength:0.3, count:[4,10]});
+			exp.fire(this.body.center,world);
+		}
 	};
 	
 	Poisonball.prototype.draw = function(ctx, world, time) {		
@@ -859,10 +867,11 @@ var Projectiles = (function(_super){
 	}
 	
 	Lightningbolt.prototype.collideAction = function(other){
-		if (other.kind == this.kind) return;
-		this.markForRemoval();
-		var exp = new Explosion({size:1, gravityFactor:[-.3,.3],colors:T,zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:0, life:[150,500], strength:0.3, count:[4,10]});
-		exp.fire(this.body.center,world);
+		if (other.kind< 10){
+			this.markForRemoval();
+			var exp = new Explosion({size:1, gravityFactor:[-.3,.3],colors:T,zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:0, life:[150,500], strength:0.3, count:[4,10]});
+			exp.fire(this.body.center,world);
+		}
 	};
 
 	Lightningbolt.prototype.onAnimate = function(world,time){
