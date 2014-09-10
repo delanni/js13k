@@ -10,7 +10,6 @@ function calculateCanvasDimensions() {
 		wrapper.style.width = (body.clientHeight*.95) * aspect + "px";
 		wrapper.style.height = (body.clientHeight*.95) + "px";
 	}
-	zoom = maxiCanvas.width/miniCanvas.width;
 }
 
 calculateCanvasDimensions();
