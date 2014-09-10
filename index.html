@@ -33,10 +33,11 @@
 		margin:auto;
 	}
 
-	#miniCanvas {
-		display:none;
-	}
 	#maxiCanvas {
+		display: none;
+	}
+	
+	canvas {
 		display: block;
 		margin: auto;
 		width:100%;
@@ -72,6 +73,9 @@
 		margin:auto;
 		margin-top:10px;
 	}
+	.disabled {
+		background: #8bac0f;
+	}
 </style>
 </head>
 
@@ -79,19 +83,19 @@
 <div id="wrapper">
 	<div class="buttons left-side">
 		<div class="button" id="0top"> </div>
-		<div class="button" id="1mid"> </div>
-		<div class="button" id="2bottom"></div>
+		<div class="button" id="6slowmo"> </div>
+		<div class="button" id="1bottom"></div>
 	</div>
 	<div id="canvasContainer">
-		<canvas id="maxiCanvas"></canvas>
-		<div id="statsbar">csa</div>
+		<div id="statsbar">Points:<span id="points"></span></div>
+		<!--<canvas id="maxiCanvas"></canvas>-->
 		<canvas id="miniCanvas" width="160" height="144" ></canvas>
 	</div>
 	<div class="buttons right-side">
-		<div class="button" id="3bfire"></div>
-		<div class="button" id="4bair"></div>
-		<div class="button" id="5bwater"></div>
-		<div class="button" id="6bearth"></div>
+		<div class="button" id="2bfire"></div>
+		<div class="button" id="3bwater"></div>
+		<div class="button" id="4bearth"></div>
+		<div class="button" id="5bair"></div>
 	</div>
 </div>
 
