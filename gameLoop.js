@@ -4,7 +4,7 @@ var r = (function() {
     };
 })();
 
-(screen.msLockOrientation&& screen.msLockOrientation("landscape-primary"))||(screen.mozLockOrientation&& screen.mozLockOrientation("landscape-primary"));
+// (screen.msLockOrientation&& screen.msLockOrientation("landscape-primary"))||(screen.mozLockOrientation&& screen.mozLockOrientation("landscape-primary"));
 
 /// SETUP ONCE
 var driveVector= new Vector2d(0,0), topV = new Vector2d(30,24), mid = new Vector2d(30,73), bottom = new Vector2d(30,118);
@@ -20,7 +20,8 @@ document.body.addEventListener("keyup", function (e) {
 
 
 var shoot = function(kind){
-	world.addEntity(new kind(parrot.body.center,world), World.COLLIDE_ALL, World.CENTER);
+	
+	if (parrot.isAlive)	world.addEntity(new kind(parrot.body.center,world), World.COLLIDE_ALL, World.CENTER);
 }
 CMD = [
 	//up
@@ -36,9 +37,9 @@ CMD = [
 	// lightning
 	Function("shoot(Projectiles.Lightningbolt)"),
 	// slowmo
-	Function("btn","able([btn],false);setTimeout(function(){CMD[7](btn)},10e3);timefactor=.25"),
+	Function("btn","able([btn],false); window.timeout = setTimeout(function(){CMD[7](btn)},10e3);timefactor=.25"),
 	// normalmo
-	Function("btn","timefactor=1;setTimeout(function(){able([btn],true)},10e3)")
+	Function("btn","timefactor=1;window.timeout = setTimeout(function(){able([btn],true)},10e3)")
 ],
 command = function(id,caller){
 	if (!caller.classList.contains("disabled"))
@@ -60,7 +61,7 @@ var ableAll = function(en){able(allButtons,en)};
 
 var s = new SpriteSheet("img/atlas.png","atlas");
 var parrot, world, atlas, ground,targetVector;
-var tree;
+var tree,enemy;
 var loadGameEntities = function(loader){
 
 	atlas = loader.spriteSheets["atlas"];
@@ -129,7 +130,7 @@ var loadGameEntities = function(loader){
     }
 	
 	// populate trees
-    for(var i=0; i < 30; i++){
+    for(var i=0; i < 20; i++){
         tree = new SpriteEntity(atlas,new Vector2d(130,123),9,12,[
             [9,12,3,800,0]
             ]);
@@ -142,12 +143,32 @@ var loadGameEntities = function(loader){
             s.body.friction = 0;
             world.addEntity(s,World.NO_COLLISION, World.FOREGROUND);*/
         };
-        tree.body.center[0]= randBetween(50,3000,true);
+        tree.body.center[0]= randBetween(1,100,true)*30 + 100;
         world.addEntity(tree, World.COLLIDE_ALL, World.CENTER);
     }
 	
+	var enemyCollideAction = function(other){
+		if(other.kind-40==this.kind){
+			this.markForRemoval();
+		}
+	}
+	
 	// populate enemigos
-	//for(var i = 0; i<
+	for(var i = 0; i< 70; i++){
+		enemy = new SpriteEntity(atlas,new Vector2d(130,123),9,12,[
+            [9,12,3,800,0]
+            ]);
+        enemy.collideAction = enemyCollideAction;
+		enemy.kind = randBetween(0,4,true);
+        enemy.onRemove = function(){
+			var cx = new Collectible(this.body.center, 4, this.color || T[0], Bubble);
+			cx.friction = 0;
+            world.addEntity(cx,World.NO_COLLISION, World.FOREGROUND);
+		}
+		enemy.body.center[0] =randBetween(1,100,true)*30 + 300;
+		enemy.body.center[1] =[topV,mid,bottom].random()[1];
+		world.addEntity(enemy,World.COLLIDE_ALL, World.CENTER);
+	}
 	
 	world.addEntity(parrot,World.COLLIDE_ALL, World.CENTER);
 	startGame();
@@ -163,6 +184,7 @@ var gameOver = function(){
 	startGame();
 };
 var startGame = function(){
+	if(window.timeout) clearTimeout(window.timeout);
 	ableAll(true);
 	timefactor = 1;
 	animate = function(time) {
