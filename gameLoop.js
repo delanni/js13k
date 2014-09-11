@@ -67,7 +67,7 @@ document.body.addEventListener("keyup", function (e) {
 
 /// SETUP EVERYTIME
 
-var s = new SpriteSheet("img/atlas.png","atlas");
+var s = new SpriteSheet("img/atlastiny.png","atlas");
 var parrot, world, atlas, ground,targetVector;
 var tree,enemy;
 var loadGameEntities = function(loader){
