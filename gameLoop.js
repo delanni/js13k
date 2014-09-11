@@ -7,9 +7,56 @@ var r = (function() {
 (screen.msLockOrientation&& screen.msLockOrientation("landscape-primary"))||(screen.mozLockOrientation&& screen.mozLockOrientation("landscape-primary"));
 
 /// SETUP ONCE
+window.smb = document.getElementById("32slowmo");
 var driveVector= new Vector2d(0,0), topV = new Vector2d(30,24), mid = new Vector2d(30,73), bottom = new Vector2d(30,118);
 
-readInputs = function(){};
+var shoot = function(kind){
+	
+	if (parrot.isAlive)	world.addEntity(new kind(parrot.body.center,world), World.COLLIDE_ALL, World.CENTER);
+}
+CMD = {
+	//up
+	87:Function("targetVector=targetVector==bottom?mid:topV;"),
+	//down
+	83:Function("targetVector=targetVector==topV?mid:bottom"),
+	// fire
+	72:Function("shoot(Projectiles.Fireball)"),
+	// water
+	74:Function("shoot(Projectiles.Waterbolt)"),
+	// poison
+	75:Function("shoot(Projectiles.Poisonball)"),
+	// lightning
+	76:Function("shoot(Projectiles.Lightningbolt)"),
+	// slowmo
+	32:Function("able([window.smb],false); window.timeout = setTimeout(function(){CMD[7](window.smb)},10e3);timefactor=.25"),
+	// normalmo
+	7:Function("btn","timefactor=1;window.timeout = setTimeout(function(){able([btn],true)},10e3)")
+},
+command = function(id,caller){
+	if (caller && (!caller.classList || !caller.classList.contains("disabled")))
+	CMD[id](caller);
+}
+
+var allButtons = Array.prototype.slice.call(document.getElementsByClassName("button"));
+allButtons.forEach(function(button){
+    button.onmousedown = button.ontouchstart = function(evt){
+        command(parseInt(this.id),this);
+        evt.preventDefault();
+        evt.handled = true;
+        return false;
+    }
+});
+var ableAll = function(en){able(allButtons,en)};
+
+
+readInputs = function(){
+	for(var i  in readInputs.keys){
+		if (+i && (i in CMD)){
+			command(+i,readInputs.keys[i]);
+			delete readInputs.keys[i];
+		}
+	}
+};
 readInputs.keys = {};
 document.body.addEventListener("keydown", function (e) {
     readInputs.keys[e.keyCode] = true;
@@ -17,45 +64,6 @@ document.body.addEventListener("keydown", function (e) {
 document.body.addEventListener("keyup", function (e) {
     readInputs.keys[e.keyCode] = false;
 });
-
-
-var shoot = function(kind){
-	
-	if (parrot.isAlive)	world.addEntity(new kind(parrot.body.center,world), World.COLLIDE_ALL, World.CENTER);
-}
-CMD = [
-	//up
-	Function("targetVector=targetVector==bottom?mid:topV;"),
-	//down
-	Function("targetVector=targetVector==topV?mid:bottom"),
-	// fire
-	Function("shoot(Projectiles.Fireball)"),
-	// water
-	Function("shoot(Projectiles.Waterbolt)"),
-	// poison
-	Function("shoot(Projectiles.Poisonball)"),
-	// lightning
-	Function("shoot(Projectiles.Lightningbolt)"),
-	// slowmo
-	Function("btn","able([btn],false); window.timeout = setTimeout(function(){CMD[7](btn)},10e3);timefactor=.25"),
-	// normalmo
-	Function("btn","timefactor=1;window.timeout = setTimeout(function(){able([btn],true)},10e3)")
-],
-command = function(id,caller){
-	if (!caller.classList.contains("disabled"))
-	CMD[id](caller);
-}
-
-var allButtons = Array.prototype.slice.call(document.getElementsByClassName("button"));
-allButtons.forEach(function(button){
-    button.onmousedown = button.ontouchstart = function(evt){
-        command(+this.id[0],this);
-        evt.preventDefault();
-        evt.handled = true;
-        return false;
-    }
-});
-var ableAll = function(en){able(allButtons,en)};
 
 /// SETUP EVERYTIME
 
@@ -159,7 +167,8 @@ var loadGameEntities = function(loader){
             [9,12,3,800,0]
             ]);
         enemy.collideAction = enemyCollideAction;
-		enemy.kind = randBetween(0,4,true);
+		//enemy.kind = randBetween(0,4,true);
+		enemy.kind = 3;
         enemy.onRemove = function(){
 			var cx = new Collectible(this.body.center, 4, this.color || T[0], Bubble);
 			cx.friction = 0;
@@ -213,7 +222,6 @@ var render = function(time) {
     ctx.fr(-translation,0,miniCanvas.width,miniCanvas.height);
 	
 	world.render(ctx,time);
-    //maxiCanvas.copyFrom(miniCanvas);
 	ctx.restore();
 	}
 };
