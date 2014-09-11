@@ -1,4 +1,6 @@
-crisp = false;
+window.crisp = localStorage.getItem("crisp")=="true";
+crispbutton.textContent = "Graphics: " + (window.crisp?"Low":"High");
+
 sanitize = function(args){
 	if (crisp) for(var i=0;i<args.length;args[i]=args[i++]|0);
 	return args;

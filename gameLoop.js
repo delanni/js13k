@@ -46,9 +46,33 @@ allButtons.forEach(function(button){
         return false;
     }
 });
+
 var ableAll = function(en){able(allButtons,en)};
 
-
+window.pts = 0;
+window.hiscore = parseInt(localStorage.getItem("hiscore")) || 0;
+points.textContent = "High score: " + window.hiscore;
+window.postfix = "";
+var addPoints = function(pts){
+    window.pts+=pts;
+    points.textContent = "Points: " + window.pts + postfix;
+    switch(Math.floor(window.pts/50)){
+        case 0: window.postfix = "";
+        case 1: window.postfix = "!"; break;
+        case 2: window.postfix = "!!"; break;
+        case 3: window.postfix = "!1"; break;
+        case 4: window.postfix = ", holy sh1t!"; break;
+        default: window.postfix = ", ERMAGHEED!!2"; break;
+    }
+},
+toggleVeil = function(onoff){
+    veil.style.display = onoff?"block":"none";
+},
+switchGraphics = function(){
+    window.crisp = !window.crisp;
+    localStorage.setItem("crisp",window.crisp);
+    crispbutton.textContent = "Graphics: " + (window.crisp?"Low":"High");
+},
 readInputs = function(){
 	for(var i  in readInputs.keys){
 		if (+i && (i in CMD)){
@@ -56,7 +80,29 @@ readInputs = function(){
 			delete readInputs.keys[i];
 		}
 	}
+},
+gameOver = function(){
+    window.hiscore = Math.max(window.hiscore,window.pts);
+    localStorage.setItem("hiscore",window.hiscore);
+    points.textContent = "High score: " + window.hiscore;
+    animate = noop;
+    loadGameEntities(loader);
+    toggleVeil(true);
+},
+startGame = function(){
+    if(window.timeout) clearTimeout(window.timeout);
+    toggleVeil(false);
+    ableAll(true);
+    timefactor = 1;
+    animate = function(time) {
+    parrot.body.speed[1] = (targetVector[1]-parrot.body.center[1])*Math.max(time,16)/3000;
+    parrot.body.speed[0]= 0.05;
+    world.animate(time);
+    parrot.body.center[1] = clamp(parrot.body.center[1],topV[1],bottom[1]);
+    };
 };
+startbutton.onclick = startGame;
+crispbutton.onclick = switchGraphics;
 readInputs.keys = {};
 document.body.addEventListener("keydown", function (e) {
     readInputs.keys[e.keyCode] = true;
@@ -180,29 +226,11 @@ var loadGameEntities = function(loader){
 	}
 	
 	world.addEntity(parrot,World.COLLIDE_ALL, World.CENTER);
-	startGame();
 }
 
 var loader = new SpriteSheetLoader(loadGameEntities);
 loader.addItem(s);
 loader.start(10);
-
-var gameOver = function(){
-	animate = noop;
-	loadGameEntities(loader);
-	startGame();
-};
-var startGame = function(){
-	if(window.timeout) clearTimeout(window.timeout);
-	ableAll(true);
-	timefactor = 1;
-	animate = function(time) {
-	parrot.body.speed[1] = (targetVector[1]-parrot.body.center[1])*Math.max(time,16)/3000;
-	parrot.body.speed[0]= 0.05;
-	world.animate(time);
-	parrot.body.center[1] = clamp(parrot.body.center[1],topV[1],bottom[1]);
-	};
-};
 
 // SETUP LOOP+FUNCTIONS
 var animate = noop;
