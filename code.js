@@ -4,12 +4,16 @@ var aspect = 228.5/154;
 
 function calculateCanvasDimensions() {
 	if (body.clientHeight*.95>body.clientWidth && parseInt(wrapper.style.width)<body.clientWidth){
-		wrapper.style.width = body.clientWidth + "px";
-		wrapper.style.height = body.clientWidth / aspect + "px";
+		var siz=clamp(body.clientWidth,200,800);
+		wrapper.style.width =  + "px";
+		wrapper.style.height = siz / aspect + "px";
 	} else {
-		wrapper.style.width = (body.clientHeight*.95) * aspect + "px";
-		wrapper.style.height = (body.clientHeight*.95) + "px";
+		var siz=clamp(body.clientHeight*.95,180,600);
+		wrapper.style.width =  siz* aspect + "px";
+		wrapper.style.height = siz+ "px";
 	}
+	veil.style.width = wrapper.style.width;
+	veil.style.height = wrapper.style.height;
 }
 
 calculateCanvasDimensions();
