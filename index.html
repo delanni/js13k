@@ -15,6 +15,8 @@
 		width:100%;
 		height:100%;
 		background: grey;
+		
+		font-size: 1.5vw;
 	}
 	canvas {
 	    image-rendering: optimizeSpeed;             // Older versions of FF
@@ -50,6 +52,14 @@
 		width:15%;
 		vertical-align: middle;
 	}
+	.right-side{
+		border-top-right-radius:1em;
+		border-bottom-right-radius:1em;
+	}
+	.left-side{
+		border-top-left-radius:1em;
+		border-bottom-left-radius:1em;
+	}
 
 	.button {
 		width: 90%;				
@@ -72,16 +82,24 @@
 		display: table;
 		margin:auto;
 		margin-top:10px;
+		border-radius: 6px;
 	}
 	.disabled {
 		background: #8bac0f;
+	}
+	#veil {
+		opacity:0.4;
+		background:lime;
+		position:absolute;
+		display:table-cell;
+		border-radius:0.5em;
 	}
 </style>
 </head>
 
 <body>
 <div id="wrapper">
-	<div class="veil"  style="opacity:0.4;background:lime"></div>
+	<div id="veil"></div>
 	<div class="buttons left-side">
 		<div class="button" id="87top"> </div>
 		<div class="button" id="32slowmo"> </div>
@@ -100,10 +118,10 @@
 	</div>
 </div>
 
+<script type="text/javascript" src="utils.js"></script>
 <script src="palette.js" type="text/javascript" ></script>
 <script type="text/javascript" src="canvasUtils.js"></script>
 <script src="code.js" type="text/javascript"></script>
-<script type="text/javascript" src="utils.js"></script>
 <script type="text/javascript" src="sprites.js"></script>
 <script type="text/javascript" src="entities.js"></script>
 <script src="fpsmeter.js" type="text/javascript" ></script>
