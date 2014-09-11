@@ -11,8 +11,10 @@ window.smb = document.getElementById("32slowmo");
 var driveVector= new Vector2d(0,0), topV = new Vector2d(30,24), mid = new Vector2d(30,73), bottom = new Vector2d(30,118);
 
 var shoot = function(kind){
-	
-	if (parrot.isAlive)	world.addEntity(new kind(parrot.body.center,world), World.COLLIDE_ALL, World.CENTER);
+	if (parrot.isAlive)	{
+        world.addEntity(new kind(parrot.body.center,world), World.COLLIDE_ALL, World.CENTER)
+        addPoints(-1);
+    };
 }
 CMD = {
 	//up
@@ -55,7 +57,6 @@ points.textContent = "High score: " + window.hiscore;
 window.postfix = "";
 var addPoints = function(pts){
     window.pts+=pts;
-    points.textContent = "Points: " + window.pts + postfix;
     switch(Math.floor(window.pts/50)){
         case 0: window.postfix = "";
         case 1: window.postfix = "!"; break;
@@ -64,6 +65,7 @@ var addPoints = function(pts){
         case 4: window.postfix = ", holy sh1t!"; break;
         default: window.postfix = ", ERMAGHEED!!2"; break;
     }
+    points.textContent = "Points: " + window.pts + postfix;
 },
 toggleVeil = function(onoff){
     veil.style.display = onoff?"block":"none";
@@ -91,6 +93,7 @@ gameOver = function(){
 },
 startGame = function(){
     if(window.timeout) clearTimeout(window.timeout);
+    window.pts = 0;
     toggleVeil(false);
     ableAll(true);
     timefactor = 1;
@@ -205,7 +208,11 @@ var loadGameEntities = function(loader){
 		if(other.kind-40==this.kind){
 			this.markForRemoval();
 		}
-	}
+	};
+
+    var coinCollected = function(){
+        addPoints(5);
+    };
 	
 	// populate enemigos
 	for(var i = 0; i< 70; i++){
@@ -218,6 +225,7 @@ var loadGameEntities = function(loader){
         enemy.onRemove = function(){
 			var cx = new Collectible(this.body.center, 4, this.color || T[0], Bubble);
 			cx.friction = 0;
+            cx.collideAction = coinCollected;
             world.addEntity(cx,World.NO_COLLISION, World.FOREGROUND);
 		}
 		enemy.body.center[0] =randBetween(1,100,true)*30 + 300;
