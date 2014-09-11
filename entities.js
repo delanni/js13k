@@ -203,7 +203,7 @@ var EntityKind = {
 	FIREEMITTER: 50,
 	WATEREMITTER: 51,
 	POISONEMITTER: 52,
-	LIGHTNINGBOLT: 53,
+	LIGHTNINGEMITTER: 53,
 
 	// ETC
 	PLAYER : 11,
@@ -372,7 +372,6 @@ var Collectible = (function(_super){
 		this.body = new PhysicsBody(center,new Vector2d(size/2,size/2));
 		this.gravityFactor = 0;
 		this.shrinkage = 0;
-		this.life = this._life = 1400;
 		this.triggerDistance = 50;
 		this.draw = draw || particleType.prototype.draw;
 	};
@@ -386,6 +385,8 @@ var Collectible = (function(_super){
 		}
 		else if (dist<this.triggerDistance){
 			this.body.gravitateTo(parrot.body.center,time);
+		} else if (dist>500){
+			this.markForRemoval();
 		}
 	};
 
