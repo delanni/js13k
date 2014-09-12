@@ -5,8 +5,8 @@ var aspect = 228.5/154;
 function calculateCanvasDimensions() {
 	var width = wrapper.offsetWidth;
 	var height = wrapper.offsetHeight;
-	var targetWidth = clamp(body.clientWidth * .95,600,1000);
-	var targetHeight = clamp(body.clientHeight * .95,600/aspect,1000/aspect);
+	var targetWidth = clamp(body.clientWidth * .95,200,1000);
+	var targetHeight = clamp(body.clientHeight * .95,200/aspect,1000/aspect);
 	var wDiff = width/targetWidth;
 	var hDiff = height / targetHeight;
 	var factor = Math.max(wDiff,hDiff);
