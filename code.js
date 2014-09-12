@@ -14,7 +14,7 @@ function calculateCanvasDimensions() {
 	wrapper.style.height = width/aspect / factor + "px";
 	veil.style.width = wrapper.style.width;
 	veil.style.height = wrapper.style.height;
-	document.body.style.fontSize = Math.round(16*(wrapper.offsetWidth-228.5)/800+14) + "px";
+	document.body.style.fontSize = Math.round(16*(wrapper.offsetWidth-228.5)/800+10) + "px";
 }
 
 calculateCanvasDimensions();
