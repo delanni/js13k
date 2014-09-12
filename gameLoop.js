@@ -8,7 +8,7 @@ var r = (function() {
 
 /// SETUP ONCE
 window.smb = document.getElementById("32slowmo");
-var driveVector= new Vector2d(0,0), topV = new Vector2d(30,24), mid = new Vector2d(30,73), bottom = new Vector2d(30,118);
+var driveVector= new Vector2d(0,0), topV = new Vector2d(30,24), mid = new Vector2d(30,73), bottom = new Vector2d(30,118), slots=[topV,mid,bottom];
 
 var shoot = function(kind){
 	if (parrot.isAlive)	{
@@ -188,22 +188,17 @@ var loadGameEntities = function(loader){
     }
 	
 	// populate trees
-    for(var i=0; i < 20; i++){
+    /*for(var i=0; i < 20; i++){
         tree = new SpriteEntity(atlas,new Vector2d(130,123),9,12,[
             [9,12,3,800,0]
             ]);
         tree.collideAction = treeCollideAction;
 		tree.kind = EntityKind.FIRETARGET;
         tree.onRemove = function(){
-		/*
-            var s = new Collectible(this.body.center, 4, T.random(), Bubble);
-            s.body.speed = this.body.speed;
-            s.body.friction = 0;
-            world.addEntity(s,World.NO_COLLISION, World.FOREGROUND);*/
         };
         tree.body.center[0]= randBetween(1,100,true)*30 + 100;
         world.addEntity(tree, World.COLLIDE_ALL, World.CENTER);
-    }
+    }*/
 	
 	var enemyCollideAction = function(other){
 		if(other.kind-40==this.kind){
@@ -215,23 +210,46 @@ var loadGameEntities = function(loader){
         addPoints(5);
     };
 	
-	// populate enemigos
-	for(var i = 0; i< 70; i++){
-		enemy = new SpriteEntity(atlas,new Vector2d(130,123),9,12,[
+	var addEnemyTo = function(x,y){
+		enemy = new SpriteEntity(atlas,[x,y[1]],9,12,[
             [9,12,3,800,0]
             ]);
         enemy.collideAction = enemyCollideAction;
 		//enemy.kind = randBetween(0,4,true);
-		enemy.kind = 3;
+		enemy.kind=3;
         enemy.onRemove = function(){
 			var cx = new Collectible(this.body.center, 4, this.color || T[0], Bubble);
-			cx.friction = 0;
+			cx.body.speed=Vector2d.random(0.03);
+			cx.friction = 0.1;
             cx.collideAction = coinCollected;
             world.addEntity(cx,World.NO_COLLISION, World.FOREGROUND);
 		}
-		enemy.body.center[0] =randBetween(1,100,true)*30 + 300;
-		enemy.body.center[1] =[topV,mid,bottom].random()[1];
 		world.addEntity(enemy,World.COLLIDE_ALL, World.CENTER);
+	};
+	
+	// populate enemigos
+	for(var i =0, inc = 100, intensity=1; i< 3000;){
+		switch(intensity){
+			case 1:
+				addEnemyTo(100+i,slots.random());
+				if (i>=1000) intensity++;
+			break;
+			case 2:
+				var p1 = randBetween(0,3,true);
+				var p2 = (p1+1)%3;
+				addEnemyTo(100+i,slots[p1]);
+				addEnemyTo(100+i,slots[p2]);
+				if (i>=2000) intensity++;
+			break;
+			case 3:
+				addEnemyTo(100+i,slots[0]);
+				addEnemyTo(100+i,slots[1]);
+				addEnemyTo(100+i,slots[2]);
+				inc = Math.max(10,inc-5);
+			break;
+		}
+		
+		i+=inc;
 	}
 	
 	world.addEntity(parrot,World.COLLIDE_ALL, World.CENTER);
