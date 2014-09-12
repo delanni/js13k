@@ -35,8 +35,7 @@ CMD = {
 	7:Function("btn","timefactor=1;window.timeout = setTimeout(function(){able([btn],true)},10e3)")
 },
 command = function(id,caller){
-	if (caller && (!caller.classList || !caller.classList.contains("disabled")))
-	CMD[id](caller);
+	if (window.gamerunning) if (caller && (!caller.classList || !caller.classList.contains("disabled"))) CMD[id](caller);
 }
 
 var allButtons = Array.prototype.slice.call(document.getElementsByClassName("button"));
@@ -58,12 +57,12 @@ window.postfix = "";
 var addPoints = function(pts){
     window.pts+=pts;
     switch(Math.floor(window.pts/50)){
-        case 0: window.postfix = "";
+        case 0: window.postfix = ""; break;
         case 1: window.postfix = "!"; break;
         case 2: window.postfix = "!!"; break;
         case 3: window.postfix = "!1"; break;
         case 4: window.postfix = ", holy sh1t!"; break;
-        default: window.postfix = ", ERMAGHEED!!2"; break;
+        default: window.postfix = ", ERMAGHERD!!2"; break;
     }
     points.textContent = "Points: " + window.pts + postfix;
 },
@@ -84,6 +83,7 @@ readInputs = function(){
 	}
 },
 gameOver = function(){
+	window.gamerunning = false;
     window.hiscore = Math.max(window.hiscore,window.pts);
     localStorage.setItem("hiscore",window.hiscore);
     points.textContent = "High score: " + window.hiscore;
@@ -92,6 +92,7 @@ gameOver = function(){
     toggleVeil(true);
 },
 startGame = function(){
+	window.gamerunning = true;
     if(window.timeout) clearTimeout(window.timeout);
     window.pts = 0;
     toggleVeil(false);
