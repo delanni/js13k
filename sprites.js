@@ -21,7 +21,8 @@ var Frame = (function(){
 		}
 		ctx.drawImage(this.img,this.x,this.y,this.w,this.h,0,0,this.w,this.h);
 		ctx.restore();*/
-		ctx.drawImage(this.img,this.x,this.y,this.w,this.h,x,y,this.w,this.h);
+		if (Math.abs(x+translation)<200)
+		 ctx.drawImage(this.img,this.x,this.y,this.w,this.h,x,y,this.w,this.h);
 	};
 	
 	return Frame;

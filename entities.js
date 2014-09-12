@@ -243,8 +243,9 @@ var SpriteEntity = (function(_super){
 
 	SpriteEntity.prototype.draw = function(ctx, world, time) {
 		var a = this.animations[this.currentAnimation];
-		var v = this.body.center.substract(this.body.corner);
-		a.drawFrame(ctx,time,v[0],v[1],this.scale[0], this.scale[1]);
+		//var v = this.body.center.substract(this.body.corner);
+		a.drawFrame(ctx,time,this.body.center[0]-this.body.corner[0],
+			this.body.center[1]-this.body.corner[1],this.scale[0], this.scale[1]);
 	};
 
 	return SpriteEntity;
