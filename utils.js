@@ -26,6 +26,8 @@ Array.prototype.random = function(){
 };
 
 Array.prototype.copy = function(){
+	if (this.length==2) 
+		return new Vector2d(this[0],this[1]);
 	return this.slice();
 }
 
