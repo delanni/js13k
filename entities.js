@@ -18,7 +18,7 @@ var Vector2d = (function () {
     };
 
     Vector2d.prototype.add = function (other) {
-        return new Vector2d(this[0] + other[0], this[1] + other[1]);
+        return [this[0] + other[0], this[1] + other[1]];
     };
 
     Vector2d.prototype.doAdd = function (other) {
@@ -28,7 +28,7 @@ var Vector2d = (function () {
     };
 
     Vector2d.prototype.substract = function (other) {
-        return new Vector2d(this[0] - other[0], this[1] - other[1]);
+        return [this[0] - other[0], this[1] - other[1]];
     };
 
     Vector2d.prototype.doSubstract = function (other) {
@@ -38,7 +38,7 @@ var Vector2d = (function () {
     };
 
     Vector2d.prototype.multiply = function (scalar) {
-        return new Vector2d(this[0] * scalar, this[1] * scalar);
+        return [this[0] * scalar, this[1] * scalar];
     };
 
     Vector2d.prototype.doMultiply = function (scalar) {
@@ -51,15 +51,11 @@ var Vector2d = (function () {
         return Math.sqrt(this[0] * this[0] + this[1] * this[1]);
     };
 
-    Vector2d.prototype.normalize = function (to) {
-        to = to || 1;
-        var m = this.getMagnitude();
-        return this.doMultiply(1 / m * to);
-    };
-
     Vector2d.prototype.copy = function(){
     	return new Vector2d(this[0],this[1]);
     };
+
+    Array.prototype.mixin(Vector2d.prototype);
 
     return Vector2d;
 })();
@@ -85,13 +81,6 @@ var PhysicsBody = (function () {
         this.speed.doAdd(this.acceleration.multiply(ms));
         this.speed.doMultiply(1 - this.friction*ms);
         this.limitSpeed();
-    };
-	
-	PhysicsBody.prototype.posttick = function (ms) {
-        this.speed.doAdd(this.acceleration.multiply(ms));
-        this.speed.doMultiply(1 - this.friction);
-        this.limitSpeed();
-		this.move(this.speed.multiply(ms));
     };
 	
 	PhysicsBody.prototype.move = function (vector) {
@@ -386,7 +375,7 @@ var Collectible = (function(_super){
 		}
 		else if (dist<this.triggerDistance){
 			this.body.gravitateTo(parrot.body.center,time);
-		} else if (dist>500){
+		} else if (dist>500 && this.kind!=-666){
 			this.markForRemoval();
 		}
 	};
@@ -418,13 +407,8 @@ var GroundEntity = (function(){
 		ctx.save();
 	    ctx.fillStyle = this.color;
 		ctx.beginPath();
-		ctx.moveTo(0, this.height);
-		/*for(var i = 0; i < this.heightmap.length; i++){
-			if (i!=0&& this.heightmap[i]==this.heightmap[i+1]) continue;
-			ctx.lineTo(i,this.height-heightmap[i]);
-		}
-		*/
-		ctx.lineTo(0,this.height-this.groundheight);
+		ctx.moveTo(-300, this.height);
+		ctx.lineTo(-300,this.height-this.groundheight);
 		ctx.lineTo(this.width,this.height-this.groundheight);
 		ctx.lineTo(this.width+1,this.height);
 		ctx.closePath();
@@ -448,7 +432,7 @@ var GroundEntity = (function(){
 var World = (function () {
 
     function World() {
-    	this.containers = ["nonCollidingEntities","collideAllEntities", "collideGroundEntities","backgroundEntities","groundElements","entities","foregroundEntities"];
+    	this.containers = ["nonCollidingEntities","collideAllEntities", "collideGroundEntities","backgroundEntities","entities","foregroundEntities"];
         this.entities = [];
 		this.backgroundEntities=[];
 		this.foregroundEntities=[];
@@ -457,7 +441,7 @@ var World = (function () {
         this.collideGroundEntities = [];
         this.collideAllEntities = [];
 
-		this.groundElements = [];
+		this.groundElement;
         this.player = null;
         this.gravity = new Vector2d(0,1e-3);
        	this.roundCount = 0;
@@ -471,12 +455,12 @@ var World = (function () {
 	
 	World.prototype.render = function(ctx,time){
 		var theWorld = this;
-		
+		if (this.roundCount%7==0) this.groundElement.draw(ctx,theWorld,time);
 		this.containers.slice(3).forEach(function(egName){
 			var entityGroup = theWorld[egName];
 			for(var i=0;i<entityGroup.length;i++){
-				// for all renderable entities there should be an isVisible property and a draw function that takes (ctx,world)
-				if (entityGroup[i] && entityGroup[i].isVisible) entityGroup[i].draw(ctx,theWorld,time);
+				if (entityGroup[i] && entityGroup[i].isVisible) 
+					entityGroup[i].draw(ctx,theWorld,time);
 			}
 		});
 	};
@@ -490,19 +474,17 @@ var World = (function () {
 			var entityGroup = theWorld[egName];
 			for(var i=0;i<entityGroup.length;i++){
 				var E = entityGroup[i];
-				// for all entities that need be animated there should be properties:
-				// isAlive, isMaked, isOnGround, animate(world,time) and applyGravity(vector,time) functions
+				if (E.body && E.body.center[0]-parrot.body.center[0]>300) continue;
 				E.isAlive && E.animate(theWorld,time);
 				E.isOnGround || (E.applyGravity && E.applyGravity(theWorld.gravity,time));
 			}
 		});
 
-		if(this.roundCount++>30) this.clear();
+		if(this.roundCount++%30==0) this.clear();
 	};
 	
 
 	World.prototype.clear = function(){
-		this.roundCount=0;
 		var theWorld = this;
 		var pool = theWorld.pool;
 
@@ -532,16 +514,11 @@ var World = (function () {
 	World.prototype.resolveCollisions = function(time){
 		var ents = this.collideGroundEntities,
 		lt = ents.length,
-		gents = this.groundElements,
-		glt = gents.length,
-		ei,ej;
+		ej = this.groundElement,
+		ei;
 		for(var i =0 ; i < lt; i++){
 			ei = ents[i];
-			if (!ei || ei.isMarked) continue;
-			for(j=0;j<glt;j++){
-				ej = gents[j];
-				if(!ei.isOnGround && ej.collidesWith(ei.body)) ei.collideGround(ej);
-			}
+			if (ei && !ei.isMarked && !ei.isOnGround && ej.collidesWith(ei.body)) ei.collideGround(ej);
 		}
 
 		ents = this.collideAllEntities;
@@ -551,8 +528,8 @@ var World = (function () {
 			if (!ei || ei.isMarked || !ei.isAlive) continue;
 			for(j=i+1;j<lt;j++){
 				ej = ents[j];
-				if (!ej || ej.isMarked || !ej.isAlive) continue;
-				if(ei.body.intersects(ej.body)) {ei.collideAction(ej); ej.collideAction(ei);}
+				if (!ej || ej.isMarked || !ej.isAlive || ej.body.center[0]-parrot.body.center[0]>300) continue;
+				if(ei.body.intersects(ej.body)) {ei.collideAction(ej); ej.collideAction(ei); break;}
 			}
 		}
 	};

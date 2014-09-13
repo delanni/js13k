@@ -38,7 +38,6 @@ command = function(id,caller){
 	if (window.gamerunning) if (caller && (!caller.classList || !caller.classList.contains("disabled"))) CMD[id](caller);
 }
 
-var allButtons = Array.prototype.slice.call(document.getElementsByClassName("button"));
 allButtons.forEach(function(button){
     button.onmousedown = button.ontouchstart = function(evt){
         command(parseInt(this.id),this);
@@ -117,15 +116,14 @@ document.body.addEventListener("keyup", function (e) {
 
 /// SETUP EVERYTIME
 
-var s = new SpriteSheet("img/atlastiny.png","atlas");
+var s = new SpriteSheet("img/atlas2.png","atlas");
 var parrot, world, atlas, ground,targetVector;
 var tree,enemy;
 var loadGameEntities = function(loader){
-
 	atlas = loader.spriteSheets["atlas"];
 	world = new World();
 	ground = new GroundEntity(15,3000);
-	world.groundElements.push(ground);
+	world.groundElement=ground;
     parrot = new SpriteEntity(atlas,new Vector2d(0,73),16,12,[
         [16,12,6,400,[27,0]]
         ]);
@@ -219,8 +217,6 @@ var loadGameEntities = function(loader){
 		enemy.kind=3;
         enemy.onRemove = function(){
 			var cx = new Collectible(this.body.center, 4, this.color || T[0], Bubble);
-			cx.body.speed=Vector2d.random(0.03);
-			cx.friction = 0.1;
             cx.collideAction = coinCollected;
             world.addEntity(cx,World.NO_COLLISION, World.FOREGROUND);
 		}
@@ -228,7 +224,7 @@ var loadGameEntities = function(loader){
 	};
 	
 	// populate enemigos
-	for(var i =0, inc = 100, intensity=1; i< 3000;){
+	for(var i =0, inc = 100, intensity=1; intensity<5;){
 		switch(intensity){
 			case 1:
 				addEnemyTo(100+i,slots.random());
@@ -246,7 +242,14 @@ var loadGameEntities = function(loader){
 				addEnemyTo(100+i,slots[1]);
 				addEnemyTo(100+i,slots[2]);
 				inc = Math.max(10,inc-5);
+				if (i>=3000) intensity++;
 			break;
+			default:
+				var cx = new Collectible([i+500,mid[1]], 6, B[4], Bubble);
+				cx.kind = -666;
+			    cx.collideAction = function(other){addPoints(50); other.markForRemoval()};
+			    world.addEntity(cx,World.NO_COLLISION, World.FOREGROUND);
+			    intensity++;
 		}
 		
 		i+=inc;
@@ -271,10 +274,10 @@ var render = function(time) {
 	translation = -parrot.body.center[0]+30;
 	ctx.save();
 	ctx.tr(translation,0);
-    ctx.fillStyle = P[0];
-	if (timefactor>0.9)
-	// because the position of this does not move -translation is needed
-    ctx.fr(-translation,0,miniCanvas.width,miniCanvas.height);
+	if (timefactor>0.9){
+		ctx.fillStyle = P[0];
+	    ctx.fr(-translation,0,miniCanvas.width,miniCanvas.height-15);
+	}
 	
 	world.render(ctx,time);
 	ctx.restore();
