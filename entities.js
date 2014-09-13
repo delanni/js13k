@@ -291,8 +291,9 @@ var Particle = (function(_super) {
 var Bubble = (function(_super) {
 	__extends(Bubble,_super);
 
-	function Bubble(center,size,color,life,shrink){
+	function Bubble(center,size,color,life,shrink, fill){
 		this.fill.apply(this, arguments);
+		this.fillIt = fill;
 	}
 
 	Bubble.kind = EntityKind.BUBBLE;
@@ -310,10 +311,15 @@ var Bubble = (function(_super) {
 		var ltwh=this.body.getLTWH(),l=ltwh[0],t=ltwh[1],w=ltwh[2],h=ltwh[3];
 		ctx.save();
 		ctx.tr(l+w/2,t+h/2);
-	    ctx.strokeStyle = this.color;
 		ctx.beginPath();
 		ctx.arc(0,0 ,this.body.corner.getMagnitude(), 0, 2 * Math.PI, false);
-		ctx.stroke();
+		if(this.fillIt){
+			ctx.fillStyle = this.color;
+			ctx.fill();
+		} else {
+		    ctx.strokeStyle = this.color;
+			ctx.stroke();
+		}
 		ctx.restore();
 	};
 	
@@ -351,6 +357,7 @@ var Collectible = (function(_super){
 
 	function Collectible(center,size,color, particleType){
 		this.fill.apply(this, arguments);
+		this.fillIt = true;
 	}
 
 	Collectible.kind = EntityKind.COLLECTIBLE;
@@ -393,7 +400,7 @@ var Target = (function(_super){
 		var animations = [[15,16,2,1e3,[kind*30,12]]]
 		 _super.call(this,spritesheet, center, 16,15,animations);
 		 this.kind = kind;
-		 this.color = [F,W,P,T][kind].random();
+		 this.color = [F,W,P,T][kind][2];
 	}
 
 	Target.prototype.onRemove = function(){
