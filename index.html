@@ -95,7 +95,7 @@
 	}
 	
 	.disabled {
-		background: #8bac0f;
+		opacity: 0.6;
 	}
 	#veil {
 		background:rgba(0,255,0,0.5);
@@ -127,6 +127,12 @@
 		margin-left:1em;
 		margin-right:1em;
 	}
+	h1, #instructions {
+		margin: 1vh;
+		color: #befedc;
+		text-align: center;
+		background: #306230;
+	}
 </style>
 </head>
 
@@ -134,9 +140,11 @@
 <img src="img/atlas2.png" id="imglol" style="display:none" />
 <div id="wrapper">
 	<div id="veil">
+		<h1> INCREDIBIRD </h1>
 		<button id="startbutton" style="margin-top:2em">Play</button>
 		<button id="crispbutton" >Graphics: High</button>
-		<div id="instructions"></div>
+		<div id="instructions">Touch to control; <br />
+		W,S to move, H,J,K,L to shoot, SPACE to time-warp.</div>
 		<div id="social"><a href="http://twitter.com/share?text=%23incredibird%20is%20...">#incredibird</a><a href="https://twitter.com/alex_on_the_web" style="float:right">@Alex</a></div>
 	</div>
 	<div class="buttons left-side">
