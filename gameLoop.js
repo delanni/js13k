@@ -204,22 +204,9 @@ var loadGameEntities = function(loader){
 		}
 	};
 
-    var coinCollected = function(){
-        addPoints(5);
-    };
-	
 	var addEnemyTo = function(x,y){
-		enemy = new SpriteEntity(atlas,[x,y[1]],9,12,[
-            [9,12,3,800,0]
-            ]);
+		enemy = new Target(atlas,[x,y[1]],randBetween(0,4,true));
         enemy.collideAction = enemyCollideAction;
-		//enemy.kind = randBetween(0,4,true);
-		enemy.kind=3;
-        enemy.onRemove = function(){
-			var cx = new Collectible(this.body.center, 4, this.color || T[0], Bubble);
-            cx.collideAction = coinCollected;
-            world.addEntity(cx,World.NO_COLLISION, World.FOREGROUND);
-		}
 		world.addEntity(enemy,World.COLLIDE_ALL, World.CENTER);
 	};
 	

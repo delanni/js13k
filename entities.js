@@ -232,7 +232,6 @@ var SpriteEntity = (function(_super){
 
 	SpriteEntity.prototype.draw = function(ctx, world, time) {
 		var a = this.animations[this.currentAnimation];
-		//var v = this.body.center.substract(this.body.corner);
 		a.drawFrame(ctx,time,this.body.center[0]-this.body.corner[0],
 			this.body.center[1]-this.body.corner[1],this.scale[0], this.scale[1]);
 	};
@@ -380,15 +379,27 @@ var Collectible = (function(_super){
 		}
 	};
 
+	Collectible.prototype.collideAction = function(){
+        addPoints(5);
+    }
+
 	return Collectible;
 })(Entity);
 
 var Target = (function(_super){
 	__extends(Target,_super);
 
-	function Target(center,size,color){
-		 _super.call(this,arguments);
+	function Target(spritesheet,center,kind){
+		var animations = [[15,16,2,1e3,[kind*30,12]]]
+		 _super.call(this,spritesheet, center, 16,15,animations);
+		 this.kind = kind;
+		 this.color = [F,W,P,T][kind].random();
 	}
+
+	Target.prototype.onRemove = function(){
+			var cx = new Collectible(this.body.center, 4, this.color || T[0], Bubble);
+            world.addEntity(cx,World.NO_COLLISION, World.FOREGROUND);
+		}
 
 	return Target;
 })(SpriteEntity);
