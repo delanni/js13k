@@ -35,7 +35,10 @@ CMD = {
 	7:Function("btn","timefactor=1;window.timeout = setTimeout(function(){able([btn],true)},10e3)")
 },
 command = function(id,caller){
-	if (window.gamerunning) if (caller && (!caller.classList || !caller.classList.contains("disabled"))) CMD[id](caller);
+	if (window.gamerunning){
+	 if (caller && (!caller.classList || !caller.classList.contains("disabled"))) CMD[id](caller);
+	}
+	else startGame();
 }
 
 allButtons.forEach(function(button){
