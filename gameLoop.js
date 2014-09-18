@@ -240,14 +240,6 @@ var loadGameEntities = function(loader){
         ]);
 	parrot.collideAction = function(other){
 		if (other.kind<10){
-			window.gif = new GIF({
-			  workers: 2,
-			  quality: 3
-			});
-			window.gif.on('finished', function(blob) {
-			  window.open(URL.createObjectURL(blob));
-			});
-
 			timefactor = Math.min(0.5,timefactor);
 			aa.play("death");
 			this.markForRemoval();
@@ -382,14 +374,6 @@ var render = function(time) {
 
 	world.render(ctx,time);
 	ctx.restore();
-	}
-
-	if (window.gif) {
-		window.gif.addFrame(miniCanvas);
-		if (!window.gamerunning){
-			window.gif.render();
-			delete window.gif;
-		}
 	}
 };
 
