@@ -194,6 +194,7 @@ readInputs = function(){
 gameOver = function(){
 	window.gamerunning = false;
 	if (window.gif) window.gif.render();
+	delete window.gif;
     window.hiscore = Math.max(window.hiscore,window.pts);
     localStorage.setItem("hiscore",window.hiscore);
     points.textContent = "High score: " + window.hiscore;
@@ -385,7 +386,7 @@ var render = function(time) {
 	world.render(ctx,time);
 	ctx.restore();
 	}
-	if (window.gif) window.gif.addFrame(ctx, {delay:120});
+	if (window.gif) window.gif.addFrame(miniCanvas, {delay:120});
 };
 
 var timefactor = 1;
