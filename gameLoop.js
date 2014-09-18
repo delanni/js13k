@@ -193,8 +193,6 @@ readInputs = function(){
 },
 gameOver = function(){
 	window.gamerunning = false;
-	if (window.gif) window.gif.render();
-	delete window.gif;
     window.hiscore = Math.max(window.hiscore,window.pts);
     localStorage.setItem("hiscore",window.hiscore);
     points.textContent = "High score: " + window.hiscore;
@@ -204,7 +202,6 @@ gameOver = function(){
 },
 startGame = function(){
 	window.gamerunning = true;
-	delete window.gif;
 	aa.play("start");
     if(window.timeout) clearTimeout(window.timeout);
     addPoints(-window.pts);
@@ -386,7 +383,11 @@ var render = function(time) {
 	world.render(ctx,time);
 	ctx.restore();
 	}
-	if (window.gif) window.gif.addFrame(miniCanvas, {delay:120});
+
+	if (window.gif) {
+		window.gif.addFrame(miniCanvas);
+		if (!window.gamerunning) delete window.gif;
+	}
 };
 
 var timefactor = 1;
