@@ -386,7 +386,10 @@ var render = function(time) {
 
 	if (window.gif) {
 		window.gif.addFrame(miniCanvas);
-		if (!window.gamerunning) delete window.gif;
+		if (!window.gamerunning){
+			window.gif.render();
+			delete window.gif;
+		}
 	}
 };
 
