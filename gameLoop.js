@@ -1,3 +1,4 @@
+try{
 var r = (function() {
     return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(callback) {
         window.setTimeout(callback, 1000 / 60,  1000 / 60);
@@ -395,3 +396,6 @@ var gameLoop = function(n) {
 };
 
 gameLoop();
+} catch(except){
+	alert(except);
+}
