@@ -193,6 +193,7 @@ readInputs = function(){
 },
 gameOver = function(){
 	window.gamerunning = false;
+	if (window.gif) window.gif.render();
     window.hiscore = Math.max(window.hiscore,window.pts);
     localStorage.setItem("hiscore",window.hiscore);
     points.textContent = "High score: " + window.hiscore;
@@ -202,6 +203,7 @@ gameOver = function(){
 },
 startGame = function(){
 	window.gamerunning = true;
+	delete window.gif;
 	aa.play("start");
     if(window.timeout) clearTimeout(window.timeout);
     addPoints(-window.pts);
@@ -240,15 +242,13 @@ var loadGameEntities = function(loader){
         ]);
 	parrot.collideAction = function(other){
 		if (other.kind<10){
-			var gif = new GIF({
+			window.gif = new GIF({
 			  workers: 2,
 			  quality: 3
 			});
-			gif.addFrame(miniCanvas, {delay: 120});
-			gif.on('finished', function(blob) {
+			window.gif.on('finished', function(blob) {
 			  window.open(URL.createObjectURL(blob));
 			});
-			gif.render();
 
 			timefactor = Math.min(0.5,timefactor);
 			aa.play("death");
@@ -375,7 +375,7 @@ var render = function(time) {
 	translation = -parrot.body.center[0]+30;
 	ctx.save();
 	ctx.tr(translation,0);
-	if (timefactor>0.9){
+	if (timefactor>0.9 || window.crisp){
 		ctx.fillStyle = P[0];
 	} else {
 		ctx.fillStyle = Ptrans;
@@ -385,6 +385,7 @@ var render = function(time) {
 	world.render(ctx,time);
 	ctx.restore();
 	}
+	if (window.gif) window.gif.addFrame(ctx, {delay:120});
 };
 
 var timefactor = 1;
