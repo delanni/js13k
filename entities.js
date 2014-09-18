@@ -387,6 +387,7 @@ var Collectible = (function(_super){
 	};
 
 	Collectible.prototype.collideAction = function(){
+		aa.play("coin");
         addPoints(5);
     }
 
@@ -789,6 +790,7 @@ var Projectiles = (function(_super){
 
 	Fireball.prototype.collideAction = function(other){
 		if (other.kind < 10){
+			aa.play("hit");
 			this.markForRemoval();
 			var exp = new Explosion({gravityFactor:.7,colors:F,offset:this.body.speed.multiply(.5),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.6});
 			exp.fire(this.body.center,world);
@@ -808,6 +810,7 @@ var Projectiles = (function(_super){
 	
 	Waterbolt.prototype.collideAction = function(other){
 		if (other.kind< 10) {
+			aa.play("hit");
 			this.markForRemoval();
 			var exp = new Explosion({gravityFactor:.8,colors:W,offset:this.body.speed.multiply(.25),zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:.8});
 			exp.fire(this.body.center,world);
@@ -836,6 +839,7 @@ var Projectiles = (function(_super){
 	
 	Poisonball.prototype.collideAction = function(other){
 		if (other.kind < 10) { 
+			aa.play("hit");
 			this.markForRemoval();
 			var exp = new Explosion({gravityFactor:-.3,colors:P,zIndex:World.FOREGROUND, collisionType: World.NO_COLLISION, shrink:2, particleType:Bubble, life:[150,500], strength:0.3, count:[4,10]});
 			exp.fire(this.body.center,world);
@@ -865,6 +869,7 @@ var Projectiles = (function(_super){
 	
 	Lightningbolt.prototype.collideAction = function(other){
 		if (other.kind< 10){
+			aa.play("hit");
 			this.markForRemoval();
 			var exp = new Explosion({size:1, gravityFactor:[-.3,.3],colors:T,zIndex:World.FOREGROUND, collisionType: World.COLLIDE_GROUND, shrink:0, life:[150,500], strength:0.3, count:[4,10]});
 			exp.fire(this.body.center,world);

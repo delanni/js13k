@@ -4,35 +4,137 @@ var r = (function() {
     };
 })();
 
-(screen.msLockOrientation&& screen.msLockOrientation("landscape-primary"))||(screen.mozLockOrientation&& screen.mozLockOrientation("landscape-primary"));
+function ArcadeAudio() {
+  this.sounds = {};
+}
+
+ArcadeAudio.prototype.add = function( key, count, settings ) {
+  this.sounds[ key ] = [];
+  settings.forEach( function( elem, index ) {
+    this.sounds[ key ].push( {
+      tick: 0,
+      count: count,
+      pool: []
+    } );
+    for( var i = 0; i < count; i++ ) {
+      var audio = new Audio();
+      audio.src = jsfxr( elem );
+      this.sounds[ key ][ index ].pool.push( audio );
+    }
+  }, this );
+};
+
+ArcadeAudio.prototype.play = function( key ) {
+  if (!window.mute){
+	  var sound = this.sounds[ key ];
+	  var soundData = sound.length > 1 ? sound[ Math.floor( Math.random() * sound.length ) ] : sound[ 0 ];
+	  soundData.pool[ soundData.tick ].play();
+	  soundData.tick < soundData.count - 1 ? soundData.tick++ : soundData.tick = 0;
+  }
+};
+
+var aa = new ArcadeAudio();
+
+aa.add( 'coin', 5,
+  [
+    [0,,0.0116,0.3061,0.432,0.4097,,,,,,0.5982,0.6732,,,,,,1,,,,,0.5]
+  ]
+);
+
+aa.add( 'shoot', 4,
+  [
+    [3,0.4699,0.211,0.7699,0.4133,0.1018,,-0.18,,,,,,,,,,,1,,,,,0.5],
+    [3,0.4285,0.171,0.7738,0.4352,0.1018,,-0.1522,-0.008,0.0491,,,0.0013,0.0333,-0.0433,,-0.0242,,1,0.0351,0.0193,0.0468,0.0409,0.5],
+    [3,0.4122,0.0712,0.864,0.5086,0.1269,0.0632,-0.1067,0.0362,0.0066,0.0432,-0.0515,0.0472,,-0.0953,0.031,0.0369,-0.0206,1,0.0859,0.1004,0.0517,0.0036,0.5]
+  ]
+);
+
+aa.add( 'hit', 5,
+  [
+    [3,,0.1302,0.5325,0.4565,0.7702,,-0.395,,,,-0.608,0.8726,,,,,,1,,,,,0.5]
+    ,[3,0.0715,0.0928,0.4473,0.4449,0.8587,,-0.3921,0.0103,0.0067,0.0994,-0.6284,0.9041,0.0273,-0.0337,0.0569,0.09,-0.1048,1,0.0013,0.0967,,0.0768,0.5],
+    [3,,0.2697,0.3528,0.4129,0.1622,,0.0306,,,,,,,,,0.209,-0.2744,1,,,,,0.5]
+  ]
+);
+
+aa.add( 'death', 5,
+  [
+    [0,0.07,0.2,0.4199,0.25,0.4158,,-0.4261,,0.25,0.0599,-0.34,0.6899,0.28,-0.1,,-0.0199,-0.0199,1,-0.0277,,0.05,-0.0199,0.5]
+  ]
+);
+
+aa.add( 'slowmo', 5,
+  [
+    [0,0.1489,0.0657,0.0741,0.8508,0.6885,,,-0.171,,0.079,-0.6692,0.8491,0.0362,-0.0111,,0.0048,0.1977,0.6197,0.3364,0.3787,,-0.0113,0.5]
+  ]
+);
+
+aa.add("start", 1,
+  [[0,,0.044,0.4721,0.4696,0.7453,,,,,,0.3999,0.5163,,,,,,1,,,,,0.5]]
+  );
+
+(screen.msLockOrientation && screen.msLockOrientation("landscape-primary"))||(screen.mozLockOrientation&& screen.mozLockOrientation("landscape-primary"));
 
 /// SETUP ONCE
+window.crisp = localStorage.getItem("crisp")=="true";
+crispbutton.textContent = "Graphics: " + (window.crisp?"Low":"High");
+window.mute = localStorage.getItem("mute") == "true";
+mutebutton.textContent = "Sounds: " + (window.mute?"Off":"On");
+
 window.smb = document.getElementById("32slowmo");
 var driveVector= new Vector2d(0,0), topV = new Vector2d(30,24), mid = new Vector2d(30,73), bottom = new Vector2d(30,118), slots=[topV,mid,bottom];
 
 var shoot = function(kind){
 	if (parrot.isAlive)	{
+		aa.play("shoot");
         world.addEntity(new kind(parrot.body.center,world), World.COLLIDE_ALL, World.CENTER)
         addPoints(-1);
     };
 }
 CMD = {
 	//up
-	87:Function("targetVector=targetVector==bottom?mid:topV;"),
+	87:function(){
+		targetVector=targetVector==bottom?mid:topV;
+	},
 	//down
-	83:Function("targetVector=targetVector==topV?mid:bottom"),
+	83:function(){
+		targetVector=targetVector==topV?mid:bottom
+	},
 	// fire
-	72:Function("shoot(Projectiles.Fireball)"),
+	72:function(){
+		shoot(Projectiles.Fireball)
+	},
 	// water
-	74:Function("shoot(Projectiles.Waterbolt)"),
+	74:function(){
+		shoot(Projectiles.Waterbolt)
+	},
 	// poison
-	75:Function("shoot(Projectiles.Poisonball)"),
+	75:function(){
+		shoot(Projectiles.Poisonball)
+	},
 	// lightning
-	76:Function("shoot(Projectiles.Lightningbolt)"),
+	76:function(){
+		shoot(Projectiles.Lightningbolt)
+	},
 	// slowmo
-	32:Function("able([window.smb],false); window.timeout = setTimeout(function(){CMD[7](window.smb)},10e3);timefactor=.25"),
+	32:function(){
+		if (timefactor>0.25){
+			aa.play('slowmo');
+			able([window.smb],false);
+			window.timeout = setTimeout(
+				function(){
+					CMD[7](window.smb)
+				},10e3);
+			timefactor=.25;
+		}
+	},
 	// normalmo
-	7:Function("btn","timefactor=1;window.timeout = setTimeout(function(){able([btn],true)},10e3)")
+	7:function(){
+		timefactor=1;
+		window.timeout = setTimeout(
+			function(){
+				able([window.smb],true)
+		},10e3)}
 },
 command = function(id,caller){
 	if (window.gamerunning){
@@ -76,6 +178,11 @@ switchGraphics = function(){
     localStorage.setItem("crisp",window.crisp);
     crispbutton.textContent = "Graphics: " + (window.crisp?"Low":"High");
 },
+soundOnOff = function(){
+    window.mute = !window.mute;
+    localStorage.setItem("mute",window.cr);
+    mutebutton.textContent = "Sounds: " + (window.mute?"Off":"On");	
+},
 readInputs = function(){
 	for(var i  in readInputs.keys){
 		if (+i && (i in CMD)){
@@ -95,16 +202,18 @@ gameOver = function(){
 },
 startGame = function(){
 	window.gamerunning = true;
+	aa.play("start");
     if(window.timeout) clearTimeout(window.timeout);
-    window.pts = 0;
+    addPoints(-window.pts);
     toggleVeil(false);
     ableAll(true);
     timefactor = 1;
     animate = function(time) {
-    parrot.body.speed[1] = (targetVector[1]-parrot.body.center[1])*Math.max(time,16)/3000;
-    parrot.body.speed[0]= 0.05;
-    world.animate(time);
-    parrot.body.center[1] = clamp(parrot.body.center[1],topV[1],bottom[1]);
+	    parrot.body.speed[1] = (targetVector[1]-parrot.body.center[1])*Math.max(time,20)/2500;
+	    if (Math.abs(parrot.body.speed[1])<PhysicsBody.EPSILON) parrot.body.speed[1]=0;
+	    parrot.body.speed[0]= 0.05;
+	    world.animate(time);
+	    parrot.body.center[1] = clamp(parrot.body.center[1],topV[1],bottom[1]);
     };
 };
 startbutton.onclick = startGame;
@@ -117,11 +226,10 @@ document.body.addEventListener("keyup", function (e) {
     readInputs.keys[e.keyCode] = false;
 });
 
-/// SETUP EVERYTIME
-
 var s = new SpriteSheet("img/atlas2.png","atlas");
 var parrot, world, atlas, ground,targetVector;
 var tree,enemy;
+/// SETUP EVERYTIME
 var loadGameEntities = function(loader){
 	atlas = loader.spriteSheets["atlas"];
 	world = new World();
@@ -132,6 +240,18 @@ var loadGameEntities = function(loader){
         ]);
 	parrot.collideAction = function(other){
 		if (other.kind<10){
+			var gif = new GIF({
+			  workers: 2,
+			  quality: 3
+			});
+			gif.addFrame(miniCanvas, {delay: 120});
+			gif.on('finished', function(blob) {
+			  window.open(URL.createObjectURL(blob));
+			});
+			gif.render();
+
+			timefactor = Math.min(0.5,timefactor);
+			aa.play("death");
 			this.markForRemoval();
 		}
 	}
@@ -188,19 +308,6 @@ var loadGameEntities = function(loader){
         }
     }
 	
-	// populate trees
-    /*for(var i=0; i < 20; i++){
-        tree = new SpriteEntity(atlas,new Vector2d(130,123),9,12,[
-            [9,12,3,800,0]
-            ]);
-        tree.collideAction = treeCollideAction;
-		tree.kind = EntityKind.FIRETARGET;
-        tree.onRemove = function(){
-        };
-        tree.body.center[0]= randBetween(1,100,true)*30 + 100;
-        world.addEntity(tree, World.COLLIDE_ALL, World.CENTER);
-    }*/
-	
 	var enemyCollideAction = function(other){
 		if(other.kind-40==this.kind){
 			this.markForRemoval();
@@ -235,9 +342,13 @@ var loadGameEntities = function(loader){
 				if (i>=3000) intensity++;
 			break;
 			default:
-				var cx = new Collectible([i+500,mid[1]], 6, B[4], Bubble);
+				var cx = new Collectible([i+300,mid[1]], 6, B[4], Bubble);
 				cx.kind = -666;
-			    cx.collideAction = function(other){addPoints(50); other.markForRemoval()};
+			    cx.collideAction = function(other){
+					aa.play("death");
+					aa.play("hit");
+			    	addPoints(50); other.markForRemoval();
+			    };
 			    world.addEntity(cx,World.NO_COLLISION, World.FOREGROUND);
 			    intensity++;
 		}
@@ -266,24 +377,23 @@ var render = function(time) {
 	ctx.tr(translation,0);
 	if (timefactor>0.9){
 		ctx.fillStyle = P[0];
-	    ctx.fr(-translation,0,miniCanvas.width,miniCanvas.height-15);
+	} else {
+		ctx.fillStyle = Ptrans;
 	}
-	
+	ctx.fr(-translation,0,miniCanvas.width,miniCanvas.height-15);
+
 	world.render(ctx,time);
 	ctx.restore();
 	}
 };
 
 var timefactor = 1;
-var meter = new FPSMeter();
 var gameLoop = function(n) {
-    meter.tickStart();
     
     n=n || (gameLoop.lastTime||0)+1000/60; 
     if (!gameLoop.lastTime) {
         gameLoop.lastTime = n;
         r(gameLoop);
-        meter.tick();
         return;
     }
     var time = Math.min((n-gameLoop.lastTime),70)*timefactor;
@@ -292,7 +402,6 @@ var gameLoop = function(n) {
     animate(time);
     render(time);
     gameLoop.lastTime = n;
-    meter.tick();
 };
 
 gameLoop();
