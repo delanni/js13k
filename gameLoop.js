@@ -129,6 +129,17 @@ CMD = {
 			timefactor=.25;
 		}
 	},
+	100:function(){
+		if (timefactor>0.25){
+			aa.play('slowmo');
+			able([window.smb],false);
+			window.timeout = setTimeout(
+				function(){
+					CMD[7](window.smb)
+				},10e3);
+			timefactor=.25;
+		}
+	},
 	// normalmo
 	7:function(){
 		timefactor=1;
@@ -226,7 +237,6 @@ document.body.addEventListener("keydown", function (e) {
 document.body.addEventListener("keyup", function (e) {
     readInputs.keys[e.keyCode] = false;
 });
-document.body.onkeypress = function(exxx){ return exxx.charCode != 32; }
 
 var s = new SpriteSheet("img/atlas2.png","atlas");
 var parrot, world, atlas, ground,targetVector;
