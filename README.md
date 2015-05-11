@@ -1,7 +1,7 @@
 js13k - INCREDIBIRD
 ===================
 
-This is the repository for my js13k entry.
+This is the repository for my js13k entry. Le cliq here to try it out: http://delanni.github.io/js13k/
 
 You can check and try the game at : http://www.js13kgames.com/entries/incredibird
 
